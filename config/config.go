@@ -6,12 +6,16 @@ import (
 	"log"
 	"os"
 
-	"github.com/redis/go-redis/v9"
 	"github.com/joho/godotenv"
+	"github.com/redis/go-redis/v9"
+
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 var (
 	RedisClient *redis.Client
+	DB          *gorm.DB
 	Ctx         = context.Background()
 )
 
@@ -34,4 +38,24 @@ func InitRedis() {
 		log.Fatalf("Could not connect to Redis: %v", err)
 	}
 	fmt.Println("Connected to Redis successfully")
+}
+
+func InitPostgreSQL() {
+	dsn := fmt.Sprintf(
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
+		os.Getenv("DB_HOST"),
+		os.Getenv("DB_USER"),
+		os.Getenv("DB_PASSWORD"),
+		os.Getenv("DB_DATABASE"),
+		os.Getenv("DB_PORT"),
+		os.Getenv("DB_SSLMODE"),
+	)
+
+	var err error
+	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		log.Fatalf("Could not connect to PostgreSQL: %v", err)
+	}
+
+	fmt.Println("Connected to PostgreSQL successfully")
 }

@@ -4,14 +4,15 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/GroceryTrak/GroceryTrakService/config"
 	"github.com/GroceryTrak/GroceryTrakService/internal/routes"
+	"github.com/go-chi/chi/v5"
 )
 
 func main() {
 	config.LoadConfig()
 	config.InitRedis()
+	config.InitPostgreSQL()
 
 	r := chi.NewRouter()
 	routes.SetupRoutes(r)
