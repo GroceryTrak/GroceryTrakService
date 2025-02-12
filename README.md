@@ -30,21 +30,25 @@ To stop the containers:
 docker compose down
 ```
 
-### **2️⃣ Using Air (Hot Reloading - Recommended for Development)**
+### **2️⃣ Install dependencies**
+```sh
+go mod tidy
+```
 
-Install Air if you haven't already:
+Install Air (optional):
 ```sh
 go install github.com/air-verse/air@latest
 ```
 
-Run the service with Air:
-```sh
-air
-```
-
-### **3️⃣ Not using Air, running with `go run` (Manual Restart Required)**
+### **3️⃣ Running**
+Choice 1: Not using Air
 ```sh
 go run cmd/*.go
+```
+
+Choice 2: Using Air
+```
+air
 ```
 
 ## **Environment Variables**
@@ -62,12 +66,24 @@ REDIS_PASS=""
 ```
 
 ## **API Endpoints**
-| Method | Endpoint              | Description                 |
-|--------|----------------------|-----------------------------|
-| GET    | `/recipes/{id}`       | Fetch a recipe by ID       |
-| POST   | `/recipes`            | Create a new recipe        |
-| PUT    | `/recipes/{id}`       | Update an existing recipe  |
-| DELETE | `/recipes/{id}`       | Delete a recipe            |
+| Method | Endpoint             | Description                |
+|--------|----------------------|----------------------------|
+| POST   | `/auth/register`     | Sign up user               |
+| POST   | `/auth/login`        | Sign in user               |
+
+| Method | Endpoint             | Description                |
+|--------|----------------------|----------------------------|
+| GET    | `/item/{id}`         | Fetch a item by ID         |
+| POST   | `/item`              | Create a new item          |
+| PUT    | `/item/{id}`         | Update an existing item    |
+| DELETE | `/item/{id}`         | Delete a item              |
+
+| Method | Endpoint             | Description                |
+|--------|----------------------|----------------------------|
+| GET    | `/recipe/{id}`       | Fetch a recipe by ID       |
+| POST   | `/recipe`            | Create a new recipe        |
+| PUT    | `/recipe/{id}`       | Update an existing recipe  |
+| DELETE | `/recipe/{id}`       | Delete a recipe            |
 
 ## **Contributing**
 Pull requests are welcome! For major changes, please open an issue first to discuss the proposed changes.
