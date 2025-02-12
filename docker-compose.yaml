@@ -2,10 +2,12 @@ services:
   db:
     image: postgres:16.3
     container_name: postgres-db
+    env_file:
+      - .env
     environment:
-      POSTGRES_DB: grocerytrak
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: adminpassword
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - db-data:/var/lib/postgresql/data
     ports:

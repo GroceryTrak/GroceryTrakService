@@ -6,8 +6,17 @@ import (
 )
 
 func SetupRoutes(r *chi.Mux) {
-	r.Post("/register", handlers.RegisterHandler)
-	r.Post("/login", handlers.LoginHandler)
+	r.Route("/auth", func(r chi.Router) {
+		r.Post("/register", handlers.RegisterHandler)
+		r.Post("/login", handlers.LoginHandler)
+	})
+
+	r.Route("/item", func(r chi.Router) {
+		r.Get("/{id}", handlers.GetItemHandler)
+		r.Post("/", handlers.CreateItemHandler)
+		r.Put("/{id}", handlers.UpdateItemHandler)
+		r.Delete("/{id}", handlers.DeleteItemHandler)
+	})
 
 	r.Route("/recipe", func(r chi.Router) {
 		r.Get("/{id}", handlers.GetRecipeHandler)

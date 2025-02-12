@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/GroceryTrak/GroceryTrakService/internal/models"
 	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
 
@@ -55,6 +56,15 @@ func InitPostgreSQL() {
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Could not connect to PostgreSQL: %v", err)
+	}
+
+	// Drop all tables
+	// DB.Migrator().DropTable(&models.Recipe{}, &models.Item{}, "recipes_items")
+
+	// Run migrations (to create tables)
+	err = DB.AutoMigrate(&models.Recipe{}, &models.Item{})
+	if err != nil {
+		log.Fatalf("Migration failed: %v", err)
 	}
 
 	fmt.Println("Connected to PostgreSQL successfully")

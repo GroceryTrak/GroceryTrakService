@@ -1,7 +1,7 @@
 package models
 
 type Item struct {
-	ID          string `gorm:"primaryKey" json:"id"`
+	ID          uint   `gorm:"primaryKey;autoIncrement" json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Quantity    int    `json:"quantity"`
