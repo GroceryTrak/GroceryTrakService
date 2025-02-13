@@ -58,11 +58,13 @@ func InitPostgreSQL() {
 		log.Fatalf("Could not connect to PostgreSQL: %v", err)
 	}
 
-	// Drop all tables
-	// DB.Migrator().DropTable(&models.Recipe{}, &models.Item{}, "recipes_items")
+	// Drop all tables (development only)
+	if os.Getenv("ENV") == "development" {
+		DB.Migrator().DropTable(&models.Recipe{}, &models.Item{}, &models.UserItem{}, &models.RecipeItem{})
+	}
 
 	// Run migrations (to create tables)
-	err = DB.AutoMigrate(&models.Recipe{}, &models.Item{})
+	err = DB.AutoMigrate(&models.Recipe{}, &models.Item{}, &models.UserItem{}, &models.RecipeItem{})
 	if err != nil {
 		log.Fatalf("Migration failed: %v", err)
 	}

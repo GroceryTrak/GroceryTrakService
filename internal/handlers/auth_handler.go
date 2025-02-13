@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/GroceryTrak/GroceryTrakService/internal/repository"
 	"github.com/GroceryTrak/GroceryTrakService/internal/models"
+	"github.com/GroceryTrak/GroceryTrakService/internal/repository"
 	"github.com/GroceryTrak/GroceryTrakService/internal/utils"
 )
 
@@ -34,13 +34,13 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	username, role, err := repository.AuthenticateUser(user.Username, user.Password)
+	id, username, role, err := repository.AuthenticateUser(user.Username, user.Password)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
-	token, err := utils.GenerateJWT(username, role)
+	token, err := utils.GenerateJWT(id, username, role)
 	if err != nil {
 		http.Error(w, "Could not generate token", http.StatusInternalServerError)
 		return

@@ -94,3 +94,26 @@ func DeleteItemHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusNoContent)
 }
+
+// Search items by substring
+func SearchItemsHandler(w http.ResponseWriter, r *http.Request) {
+	keyword := r.URL.Query().Get("q")
+	if keyword == "" {
+		http.Error(w, "Search keyword is required", http.StatusBadRequest)
+		return
+	}
+
+	var items []models.Item
+	searchTerm := "%" + keyword + "%"
+
+	result := config.DB.Where("name LIKE ? OR description LIKE ?", searchTerm, searchTerm).Find(&items)
+	if result.Error != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	json.NewEncoder(w).Encode(items)
+}
