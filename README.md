@@ -63,9 +63,16 @@ DB_PORT=5432
 
 REDIS_HOST="redis"
 REDIS_PASS=""
+
+JWT_TOKEN=""
+
+ENV="development"
 ```
 
 ## **API Endpoints**
+
+#### Without Bearer Token ####
+
 | Method | Endpoint             | Description                |
 |--------|----------------------|----------------------------|
 | POST   | `/auth/register`     | Sign up user               |
@@ -77,6 +84,7 @@ REDIS_PASS=""
 | POST   | `/item`              | Create a new item          |
 | PUT    | `/item/{id}`         | Update an existing item    |
 | DELETE | `/item/{id}`         | Delete a item              |
+| GET    | `/item/search?q=`    | Search an item by name     |
 
 | Method | Endpoint             | Description                |
 |--------|----------------------|----------------------------|
@@ -84,6 +92,16 @@ REDIS_PASS=""
 | POST   | `/recipe`            | Create a new recipe        |
 | PUT    | `/recipe/{id}`       | Update an existing recipe  |
 | DELETE | `/recipe/{id}`       | Delete a recipe            |
+| GET    | `/recipe/search?q=`  | Search a recipe by name    |
+
+#### With Bearer Token ####
+
+| Method | Endpoint             | Description                |
+|--------|----------------------|----------------------------|
+| GET    | `/user_item/{id}`    | Fetch user item by ID      |
+| POST   | `/user_item`         | Create new user item       |
+| PUT    | `/user_item/{id}`    | Update existing user item  |
+| DELETE | `/user_item/{id}`    | Delete user item           |
 
 ## **Contributing**
 Pull requests are welcome! For major changes, please open an issue first to discuss the proposed changes.
