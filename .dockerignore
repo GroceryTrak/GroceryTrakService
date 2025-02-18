@@ -1,0 +1,35 @@
+# Temporary files
+tmp/
+*.tmp
+
+# Go build artifacts
+*.out
+*.exe
+*.o
+*.a
+*.so
+
+# Go modules and package dependencies (if using vendoring)
+vendor/
+pkg/
+
+# Go binary and test files
+bin/
+*.test
+
+# Logs and debugging files
+*.log
+*.prof
+*.cov
+
+# Version control
+.git/
+.gitignore
+
+# Environment variables and secrets
+.env
+*.env
+
+# Docker-related files
+docker-compose.yaml
+Dockerfile
