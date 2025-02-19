@@ -27,6 +27,16 @@ func GetUserItemHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Validate if the item exists
+	var item models.Item
+	if err := config.DB.Where("id = ?", itemID).First(&item).Error; err != nil {
+		http.Error(w, "Item not found", http.StatusBadRequest)
+		return
+	}
+
+	// Assign the fetched item details
+	userItem.Item = item
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(userItem)
 }
@@ -43,6 +53,16 @@ func CreateUserItemHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Ensure user can only create items for themselves
 	newUserItem.UserID = userID
+
+	// Validate if the item exists
+	var item models.Item
+	if err := config.DB.Where("id = ?", newUserItem.ItemID).First(&item).Error; err != nil {
+		http.Error(w, "Item not found", http.StatusBadRequest)
+		return
+	}
+
+	// Assign the fetched item details
+	newUserItem.Item = item
 
 	// Prevent duplicate entries
 	existingUserItem := models.UserItem{}

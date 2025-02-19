@@ -54,19 +54,17 @@ air
 ## **Environment Variables**
 Before running, ensure your `.env` file contains the correct values:
 ```ini
-DB_HOST="localhost"
-DB_USER="admin"
-DB_PASSWORD="adminpassword"
-DB_DATABASE="grocerytrak"
-DB_SSLMODE="disable"
-DB_PORT=5432
+DB_HOST=localhost
+DB_USER=admin
+DB_PASSWORD=adminpassword
+DB_DATABASE=grocerytrak
 
-REDIS_HOST="redis"
-REDIS_PASS=""
+REDIS_HOST=localhost
+REDIS_PASS=adminpassword
 
-JWT_TOKEN=""
+JWT_SECRET=8dd256ba6e1462d6e3439e51794cd5746455cbd1340af5eb15363181e7edc73a
 
-ENV="development"
+ENV=development
 ```
 
 ## **API Endpoints**

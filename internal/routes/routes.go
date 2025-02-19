@@ -31,9 +31,9 @@ func SetupRoutes(r *chi.Mux) {
 	r.Route("/user_item", func(r chi.Router) {
 		r.Use(middlewares.AuthMiddleware)
 
-		r.Get("/{id}", handlers.GetUserItemHandler)
+		r.Get("/{item_id}", handlers.GetUserItemHandler)
 		r.Post("/", handlers.CreateUserItemHandler)
-		r.Put("/{id}", handlers.UpdateUserItemHandler)
-		r.Delete("/{id}", handlers.DeleteUserItemHandler)
+		r.Put("/{item_id}", handlers.UpdateUserItemHandler)
+		r.Delete("/{item_id}", handlers.DeleteUserItemHandler)
 	})
 }

@@ -29,8 +29,8 @@ func LoadConfig() {
 
 func InitRedis() {
 	RedisClient = redis.NewClient(&redis.Options{
-		Addr:     os.Getenv("REDIS_HOST"), // AWS ElastiCache Endpoint
-		Password: os.Getenv("REDIS_PASS"), // If no password, leave empty
+		Addr:     os.Getenv("REDIS_HOST") + ":6379",
+		Password: os.Getenv("REDIS_PASS"),
 		DB:       0,
 	})
 
@@ -48,8 +48,8 @@ func InitPostgreSQL() {
 		os.Getenv("DB_USER"),
 		os.Getenv("DB_PASSWORD"),
 		os.Getenv("DB_DATABASE"),
-		os.Getenv("DB_PORT"),
-		os.Getenv("DB_SSLMODE"),
+		"5432",
+		"disable",
 	)
 
 	var err error
@@ -60,11 +60,11 @@ func InitPostgreSQL() {
 
 	// Drop all tables (development only)
 	if os.Getenv("ENV") == "development" {
-		DB.Migrator().DropTable(&models.Recipe{}, &models.Item{}, &models.UserItem{}, &models.RecipeItem{})
+		DB.Migrator().DropTable(&models.Recipe{}, &models.Item{}, &models.UserItem{}, &models.RecipeItem{}, &models.User{})
 	}
 
 	// Run migrations (to create tables)
-	err = DB.AutoMigrate(&models.Recipe{}, &models.Item{}, &models.UserItem{}, &models.RecipeItem{})
+	err = DB.AutoMigrate(&models.Recipe{}, &models.Item{}, &models.UserItem{}, &models.RecipeItem{}, &models.User{})
 	if err != nil {
 		log.Fatalf("Migration failed: %v", err)
 	}
