@@ -18,6 +18,7 @@ func SetupRoutes(r *chi.Mux) {
 		r.Put("/{id}", handlers.UpdateItemHandler)
 		r.Delete("/{id}", handlers.DeleteItemHandler)
 		r.Get("/search", handlers.SearchItemsHandler)
+		r.Post("/predict", handlers.PredictItemsHandler)
 	})
 
 	r.Route("/recipe", func(r chi.Router) {
