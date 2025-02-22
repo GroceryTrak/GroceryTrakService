@@ -160,6 +160,7 @@ func DeleteRecipeHandler(w http.ResponseWriter, r *http.Request) {
 func SearchRecipesHandler(w http.ResponseWriter, r *http.Request) {
 	keyword := r.URL.Query().Get("q")
 	ingredientParam := r.URL.Query().Get("ingredients") // Comma-separated ingredient IDs
+	diet := r.URL.Query().Get("diet")
 
 	var recipes []models.Recipe
 	query := config.DB.Preload("Ingredients.Item")
@@ -177,6 +178,12 @@ func SearchRecipesHandler(w http.ResponseWriter, r *http.Request) {
 			Where("ri.item_id IN (?)", ingredientIDs).
 			Group("recipes.id").
 			Having("COUNT(DISTINCT ri.item_id) = ?", len(ingredientIDs)) // Ensure all selected items exist
+	}
+
+	// Filter by diet if provided
+	if diet != "" {
+		dietSearchTerm := "%" + diet + "%"
+		query = query.Where("diet LIKE ?", dietSearchTerm)
 	}
 
 	// Execute query
