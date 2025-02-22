@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/GroceryTrak/GroceryTrakService/config"
 	"github.com/GroceryTrak/GroceryTrakService/internal/models"
@@ -158,20 +159,34 @@ func DeleteRecipeHandler(w http.ResponseWriter, r *http.Request) {
 // Search recipes by substring
 func SearchRecipesHandler(w http.ResponseWriter, r *http.Request) {
 	keyword := r.URL.Query().Get("q")
-	if keyword == "" {
-		http.Error(w, "Search keyword is required", http.StatusBadRequest)
-		return
-	}
+	ingredientParam := r.URL.Query().Get("ingredients") // Comma-separated ingredient IDs
 
 	var recipes []models.Recipe
-	searchTerm := "%" + keyword + "%"
+	query := config.DB.Preload("Ingredients.Item")
 
-	result := config.DB.Preload("Ingredients.Item").Where("name LIKE ?", searchTerm).Find(&recipes)
+	// Filter by name if a keyword is provided
+	if keyword != "" {
+		searchTerm := "%" + keyword + "%"
+		query = query.Where("name LIKE ?", searchTerm)
+	}
+
+	// Filter by ingredients if the parameter exists
+	if ingredientParam != "" {
+		ingredientIDs := strings.Split(ingredientParam, ",") // Convert string to slice
+		query = query.Joins("JOIN recipe_items ri ON ri.recipe_id = recipes.id").
+			Where("ri.item_id IN (?)", ingredientIDs).
+			Group("recipes.id").
+			Having("COUNT(DISTINCT ri.item_id) = ?", len(ingredientIDs)) // Ensure all selected items exist
+	}
+
+	// Execute query
+	result := query.Find(&recipes)
 	if result.Error != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
 	}
 
+	// Return JSON response
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(recipes)
