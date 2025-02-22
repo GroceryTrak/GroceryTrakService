@@ -83,8 +83,13 @@ func UpdateRecipeHandler(w http.ResponseWriter, r *http.Request) {
 	if instruction, ok := updatePayload["instruction"].(string); ok {
 		existingRecipe.Instruction = instruction
 	}
-	if difficulty, ok := updatePayload["difficulty"].(string); ok {
-		existingRecipe.Difficulty = difficulty
+	if difficultyStr, ok := updatePayload["difficulty"].(string); ok {
+		if difficulty, err := models.ParseDifficulty(difficultyStr); err == nil {
+			existingRecipe.Difficulty = difficulty
+		} else {
+			http.Error(w, "Invalid difficulty value", http.StatusBadRequest)
+			return
+		}
 	}
 	if duration, ok := updatePayload["duration"].(float64); ok {
 		existingRecipe.Duration = uint(duration)

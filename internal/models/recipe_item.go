@@ -5,5 +5,5 @@ type RecipeItem struct {
 	ItemID   uint   `gorm:"primaryKey;constraint:OnDelete:CASCADE;" json:"item_id"`
 	Item     Item   `gorm:"foreignKey:ItemID;constraint:OnDelete:CASCADE;" json:"item"`
 	Quantity uint   `json:"quantity"`
-	Unit     string `json:"unit"`
+	Unit     string `gorm:"type:varchar(20)" json:"unit"`
 }

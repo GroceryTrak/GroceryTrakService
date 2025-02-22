@@ -8,7 +8,7 @@ import (
 	"github.com/GroceryTrak/GroceryTrakService/internal/utils"
 )
 
-func RegisterUser(username, password, role string) error {
+func RegisterUser(username, password string, role models.Role) error {
 	var existingUser models.User
 	result := config.DB.Where("username = ?", username).First(&existingUser)
 	if result.Error == nil {
@@ -21,7 +21,7 @@ func RegisterUser(username, password, role string) error {
 	user := models.User{
 		Username: username,
 		Password: hashedPassword,
-		Role:     role,
+		Role:     "user",
 	}
 
 	// Save user to PostgreSQL
@@ -31,7 +31,7 @@ func RegisterUser(username, password, role string) error {
 	return nil
 }
 
-func AuthenticateUser(username, password string) (uint, string, string, error) {
+func AuthenticateUser(username, password string) (uint, string, models.Role, error) {
 	var user models.User
 	result := config.DB.Where("username = ?", username).First(&user)
 	if result.Error != nil {

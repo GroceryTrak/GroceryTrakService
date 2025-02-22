@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/GroceryTrak/GroceryTrakService/internal/models"
 	"github.com/joho/godotenv"
@@ -61,6 +62,20 @@ func InitPostgreSQL() {
 	// Drop all tables (development only)
 	if os.Getenv("ENV") == "development" {
 		DB.Migrator().DropTable(&models.Recipe{}, &models.Item{}, &models.UserItem{}, &models.RecipeItem{}, &models.User{})
+	}
+
+	// Create ENUM types if they don't exist
+	enums := []string{
+		"role AS ENUM ('user', 'admin')",
+		"difficulty AS ENUM ('easy', 'medium', 'hard')",
+	}
+
+	for _, enum := range enums {
+		query := "DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = '" + enum[:strings.Index(enum, " ")] + "') THEN CREATE TYPE " + enum + "; END IF; END $$;"
+		err = DB.Exec(query).Error
+		if err != nil {
+			log.Fatalf("Failed to create ENUM type %s: %v", enum, err)
+		}
 	}
 
 	// Run migrations (to create tables)

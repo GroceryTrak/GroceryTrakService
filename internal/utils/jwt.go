@@ -4,12 +4,13 @@ import (
 	"os"
 	"time"
 
+	"github.com/GroceryTrak/GroceryTrakService/internal/models"
 	"github.com/golang-jwt/jwt/v5"
 )
 
 var jwtSecret = []byte(os.Getenv("JWT_SECRET"))
 
-func GenerateJWT(id uint, username string, role string) (string, error) {
+func GenerateJWT(id uint, username string, role models.Role) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"id":       id,
 		"username": username,

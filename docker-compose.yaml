@@ -12,8 +12,6 @@ services:
       - db-data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-    networks:
-      - app-network
 
   redis:
     image: redis:7.4-alpine
@@ -27,11 +25,6 @@ services:
     ports:
       - "6379:6379"
     command: redis-server --requirepass ${REDIS_PASS}
-    networks:
-      - app-network
-
-networks:
-  app-network:
 
 volumes:
   db-data:
