@@ -65,6 +65,7 @@ REDIS_PASS=adminpassword
 JWT_SECRET=8dd256ba6e1462d6e3439e51794cd5746455cbd1340af5eb15363181e7edc73a
 
 ENV=development
+FRONTEND_DOMAIN=
 ```
 
 ## **API Endpoints**
@@ -76,13 +77,13 @@ ENV=development
 | POST   | `/auth/register`     | Sign up user               |
 | POST   | `/auth/login`        | Sign in user               |
 
-| Method | Endpoint             | Description                |
-|--------|----------------------|----------------------------|
-| GET    | `/item/{id}`         | Fetch a item by ID         |
-| POST   | `/item`              | Create a new item          |
-| PUT    | `/item/{id}`         | Update an existing item    |
-| DELETE | `/item/{id}`         | Delete a item              |
-| GET    | `/item/search?q=`    | Search an item by name     |
+| Method | Endpoint                       | Description                               |
+|--------|--------------------------------|-------------------------------------------|
+| GET    | `/item/{id}`                   | Fetch a item by ID                        |
+| POST   | `/item`                        | Create a new item                         |
+| PUT    | `/item/{id}`                   | Update an existing item                   |
+| DELETE | `/item/{id}`                   | Delete a item                             |
+| GET    | `/item/search?q=&ingredients=1`| Search an item by name, ingredients by ID |
 
 | Method | Endpoint             | Description                |
 |--------|----------------------|----------------------------|
