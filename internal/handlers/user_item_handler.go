@@ -11,6 +11,20 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+// Get all user's items
+func GetAllUserItemHandler(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value(middlewares.IDKey).(uint) // Get authenticated user ID
+
+	var userItems []models.UserItem
+	if err := config.DB.Where("user_id = ?", userID).Preload("Item").Find(&userItems).Error; err != nil {
+		http.Error(w, "Failed to fetch user items", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(userItems)
+}
+
 // Get a user's item by ItemID
 func GetUserItemHandler(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value(middlewares.IDKey).(uint) // Get authenticated user ID
