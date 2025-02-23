@@ -26,5 +26,18 @@ services:
       - "6379:6379"
     command: redis-server --requirepass ${REDIS_PASS}
 
+  golang:
+    build:
+      context: .
+    image: grocerytrakservice:dev
+    container_name: grocerytrakservice
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+    ports:
+      - "8080:8080"
+
 volumes:
   db-data:
