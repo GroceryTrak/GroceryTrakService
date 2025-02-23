@@ -31,5 +31,6 @@ type Recipe struct {
 	Duration    uint         `json:"duration"`
 	KCal        uint         `json:"kcal"`
 	Diet        string       `json:"diet"`
+	ImageLink   string       `json:"image_link"`
 	Ingredients []RecipeItem `gorm:"foreignKey:RecipeID;constraint:OnDelete:CASCADE;" json:"ingredients"`
 }

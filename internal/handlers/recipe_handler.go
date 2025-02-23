@@ -98,7 +98,12 @@ func UpdateRecipeHandler(w http.ResponseWriter, r *http.Request) {
 	if kcal, ok := updatePayload["kcal"].(float64); ok {
 		existingRecipe.KCal = uint(kcal)
 	}
-
+	if diet, ok := updatePayload["diet"].(string); ok {
+		existingRecipe.Diet = diet
+	}
+	if imageLink, ok := updatePayload["image_link"].(string); ok {
+		existingRecipe.ImageLink = imageLink
+	}
 	// Handle ingredients only if the field exists
 	if ingredientsRaw, exists := updatePayload["ingredients"]; exists {
 		config.DB.Where("recipe_id = ?", id).Delete(&models.RecipeItem{}) // Clear old items

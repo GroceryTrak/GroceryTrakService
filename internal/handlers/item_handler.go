@@ -236,6 +236,7 @@ func PredictItemsHandler(w http.ResponseWriter, r *http.Request) {
 			newItem := models.Item{
 				Name:        class,
 				Description: "",
+				ImageLink:   "",
 			}
 			config.DB.Create(&newItem)
 			result = append(result, newItem)
