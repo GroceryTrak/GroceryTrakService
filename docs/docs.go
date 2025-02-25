@@ -51,7 +51,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/templates.AuthResponse"
+                            "$ref": "#/definitions/templates.LoginResponse"
                         }
                     },
                     "default": {
@@ -293,15 +293,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "templates.AuthResponse": {
-            "type": "object",
-            "properties": {
-                "token": {
-                    "type": "string",
-                    "example": "eyJhbGciOiJIUzI1NiIsInR..."
-                }
-            }
-        },
         "templates.BadRequestResponse": {
             "type": "object",
             "properties": {
@@ -398,6 +389,15 @@ const docTemplate = `{
                 "username": {
                     "type": "string",
                     "example": "john_doe"
+                }
+            }
+        },
+        "templates.LoginResponse": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR..."
                 }
             }
         },

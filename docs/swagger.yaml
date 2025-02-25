@@ -1,10 +1,4 @@
 definitions:
-  templates.AuthResponse:
-    properties:
-      token:
-        example: eyJhbGciOiJIUzI1NiIsInR...
-        type: string
-    type: object
   templates.BadRequestResponse:
     properties:
       error:
@@ -72,6 +66,12 @@ definitions:
         example: john_doe
         type: string
     type: object
+  templates.LoginResponse:
+    properties:
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR...
+        type: string
+    type: object
   templates.NotFoundResponse:
     properties:
       error:
@@ -123,7 +123,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/templates.AuthResponse'
+            $ref: '#/definitions/templates.LoginResponse'
         default:
           description: Standard Error Responses
           schema:

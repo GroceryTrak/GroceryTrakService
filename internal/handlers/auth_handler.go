@@ -42,7 +42,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param request body templates.LoginRequest true "User Login Request"
-// @Success 200 {object} templates.AuthResponse
+// @Success 200 {object} templates.LoginResponse
 // @Failure default {object} templates.ErrorResponse "Standard Error Responses"
 // @Router /auth/login [post]
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -67,5 +67,5 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(templates.AuthResponse{Token: token})
+	json.NewEncoder(w).Encode(templates.LoginResponse{Token: token})
 }
