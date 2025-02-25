@@ -35,6 +35,34 @@ definitions:
         example: Internal server error
         type: string
     type: object
+  templates.ItemRequest:
+    properties:
+      description:
+        example: Organic whole milk
+        type: string
+      name:
+        example: Milk
+        type: string
+    type: object
+  templates.ItemResponse:
+    properties:
+      description:
+        example: Organic whole milk
+        type: string
+      id:
+        example: 1
+        type: integer
+      name:
+        example: Milk
+        type: string
+    type: object
+  templates.ItemsResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/templates.ItemResponse'
+        type: array
+    type: object
   templates.LoginRequest:
     properties:
       password:
@@ -100,7 +128,7 @@ paths:
           description: Standard Error Responses
           schema:
             $ref: '#/definitions/templates.ErrorResponse'
-      summary: Authenticate a user
+      summary: Logs in a user
       tags:
       - auth
   /auth/register:
@@ -125,4 +153,133 @@ paths:
       summary: Register a new user
       tags:
       - auth
+  /item:
+    post:
+      consumes:
+      - application/json
+      description: Add a new item to the database
+      parameters:
+      - description: New Item
+        in: body
+        name: item
+        required: true
+        schema:
+          $ref: '#/definitions/templates.ItemRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/templates.ItemResponse'
+        default:
+          description: Standard Error Responses
+          schema:
+            $ref: '#/definitions/templates.ErrorResponse'
+      summary: Create an item
+      tags:
+      - item
+  /item/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove an item by its ID
+      parameters:
+      - description: Item ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        default:
+          description: Standard Error Responses
+          schema:
+            $ref: '#/definitions/templates.ErrorResponse'
+      summary: Delete an item
+      tags:
+      - item
+    get:
+      consumes:
+      - application/json
+      description: Get an item by its ID
+      parameters:
+      - description: Item ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/templates.ItemResponse'
+        default:
+          description: Standard Error Responses
+          schema:
+            $ref: '#/definitions/templates.ErrorResponse'
+      summary: Get an item
+      tags:
+      - item
+    put:
+      consumes:
+      - application/json
+      description: Update an existing item by ID
+      parameters:
+      - description: Item ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated Item Data
+        in: body
+        name: item
+        required: true
+        schema:
+          $ref: '#/definitions/templates.ItemRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/templates.ItemResponse'
+        default:
+          description: Standard Error Responses
+          schema:
+            $ref: '#/definitions/templates.ErrorResponse'
+      summary: Update an item
+      tags:
+      - item
+  /item/search:
+    get:
+      consumes:
+      - application/json
+      description: Searches for items that match the provided keyword in their name
+        or description
+      parameters:
+      - description: Search keyword
+        in: query
+        name: q
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/templates.ItemsResponse'
+        default:
+          description: Standard Error Responses
+          schema:
+            $ref: '#/definitions/templates.ErrorResponse'
+      summary: Search items
+      tags:
+      - item
 swagger: "2.0"

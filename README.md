@@ -72,6 +72,7 @@ DETECT_DOMAIN=https://grocerytrak-devs-grocerytrakdetect.hf.space
 
 ## **API Endpoints**
 Please run the app and check `/swagger/index.html`.
+When updating API documentation, run `swag init`
 
 ## **Contributing**
 Pull requests are welcome! For major changes, please open an issue first to discuss the proposed changes.

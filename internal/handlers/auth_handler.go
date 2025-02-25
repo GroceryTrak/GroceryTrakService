@@ -9,7 +9,6 @@ import (
 	"github.com/GroceryTrak/GroceryTrakService/internal/utils"
 )
 
-// RegisterHandler handles user registration
 // @Summary Register a new user
 // @Description Creates a new user account
 // @Tags auth
@@ -37,8 +36,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(templates.RegisterResponse{Message: "User registered successfully"})
 }
 
-// LoginHandler handles user login
-// @Summary Authenticate a user
+// @Summary Logs in a user
 // @Description Logs in a user and returns a JWT token
 // @Tags auth
 // @Accept json

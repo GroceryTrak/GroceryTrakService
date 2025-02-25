@@ -5,23 +5,31 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/GroceryTrak/GroceryTrakService/config"
-	"github.com/GroceryTrak/GroceryTrakService/internal/models"
+	"github.com/GroceryTrak/GroceryTrakService/internal/repository"
+	"github.com/GroceryTrak/GroceryTrakService/internal/templates"
 	"github.com/go-chi/chi/v5"
 )
 
-// Get an item by ID
+// @Summary Get an item
+// @Description Get an item by its ID
+// @Tags item
+// @Accept json
+// @Produce json
+// @Param id path int true "Item ID"
+// @Success 200 {object} templates.ItemResponse
+// @Failure default {object} templates.ErrorResponse "Standard Error Responses"
+// @Router /item/{id} [get]
 func GetItemHandler(w http.ResponseWriter, r *http.Request) {
-	uintID, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 32)
+	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 32)
 	if err != nil {
-		http.Error(w, "Recipe not found", http.StatusNotFound)
+		http.Error(w, "Invalid item ID", http.StatusBadRequest)
 		return
 	}
-	id := uint(uintID)
 
-	var item models.Item
-	if err := config.DB.First(&item, "id = ?", id).Error; err != nil {
-		http.Error(w, "Item not found", http.StatusNotFound)
+	item, err := repository.GetItem(uint(id))
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(templates.NotFoundResponse{Error: "Item not found"})
 		return
 	}
 
@@ -29,91 +37,121 @@ func GetItemHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(item)
 }
 
-// Create a new item
+// @Summary Create an item
+// @Description Add a new item to the database
+// @Tags item
+// @Accept json
+// @Produce json
+// @Param item body templates.ItemRequest true "New Item"
+// @Success 201 {object} templates.ItemResponse
+// @Failure default {object} templates.ErrorResponse "Standard Error Responses"
+// @Router /item [post]
 func CreateItemHandler(w http.ResponseWriter, r *http.Request) {
-	var newItem models.Item
+	var newItem templates.ItemRequest
 	if err := json.NewDecoder(r.Body).Decode(&newItem); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(templates.BadRequestResponse{Error: "Invalid request data"})
 		return
 	}
 
-	if err := config.DB.Create(&newItem).Error; err != nil {
-		http.Error(w, "Failed to create item", http.StatusInternalServerError)
+	createdItem, err := repository.CreateItem(newItem)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(templates.InternalServerErrorResponse{Error: "Failed to create item"})
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(newItem)
+	json.NewEncoder(w).Encode(createdItem)
 }
 
-// Update an item by ID
+// @Summary Update an item
+// @Description Update an existing item by ID
+// @Tags item
+// @Accept json
+// @Produce json
+// @Param id path int true "Item ID"
+// @Param item body templates.ItemRequest true "Updated Item Data"
+// @Success 200 {object} templates.ItemResponse
+// @Failure default {object} templates.ErrorResponse "Standard Error Responses"
+// @Router /item/{id} [put]
 func UpdateItemHandler(w http.ResponseWriter, r *http.Request) {
-	uintID, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 32)
+	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 32)
 	if err != nil {
-		http.Error(w, "Recipe not found", http.StatusNotFound)
-		return
-	}
-	id := uint(uintID)
-
-	var existingItem models.Item
-	if err := config.DB.First(&existingItem, "id = ?", id).Error; err != nil {
-		http.Error(w, "Item not found", http.StatusNotFound)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(templates.BadRequestResponse{Error: "Invalid item ID"})
 		return
 	}
 
-	var updatedItem models.Item
+	var updatedItem templates.ItemRequest
 	if err := json.NewDecoder(r.Body).Decode(&updatedItem); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(templates.BadRequestResponse{Error: "Invalid request data"})
 		return
 	}
 
-	updatedItem.ID = id
-	if err := config.DB.Save(&updatedItem).Error; err != nil {
-		http.Error(w, "Failed to update item", http.StatusInternalServerError)
+	item, err := repository.UpdateItem(uint(id), updatedItem)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(templates.NotFoundResponse{Error: "Item not found"})
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(updatedItem)
+	json.NewEncoder(w).Encode(item)
 }
 
-// Delete an item by ID
+// @Summary Delete an item
+// @Description Remove an item by its ID
+// @Tags item
+// @Accept json
+// @Produce json
+// @Param id path int true "Item ID"
+// @Success 204 "No Content"
+// @Failure default {object} templates.ErrorResponse "Standard Error Responses"
+// @Router /item/{id} [delete]
 func DeleteItemHandler(w http.ResponseWriter, r *http.Request) {
-	uintID, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 32)
+	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 32)
 	if err != nil {
-		http.Error(w, "Recipe not found", http.StatusNotFound)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(templates.BadRequestResponse{Error: "Invalid item ID"})
 		return
 	}
-	id := uint(uintID)
 
-	if err := config.DB.Delete(&models.Item{}, "id = ?", id).Error; err != nil {
-		http.Error(w, "Failed to delete item", http.StatusInternalServerError)
+	if err := repository.DeleteItem(uint(id)); err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(templates.NotFoundResponse{Error: "Item not found"})
 		return
 	}
 
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// Search items by substring
+// @Summary Search items
+// @Description Searches for items that match the provided keyword in their name or description
+// @Tags item
+// @Accept json
+// @Produce json
+// @Param q query string true "Search keyword"
+// @Success 200 {object} templates.ItemsResponse
+// @Failure default {object} templates.ErrorResponse "Standard Error Responses"
+// @Router /item/search [get]
 func SearchItemsHandler(w http.ResponseWriter, r *http.Request) {
 	keyword := r.URL.Query().Get("q")
 	if keyword == "" {
-		http.Error(w, "Search keyword is required", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(templates.BadRequestResponse{Error: "Search keyword is required"})
 		return
 	}
 
-	var items []models.Item
-	searchTerm := "%" + keyword + "%"
-
-	result := config.DB.Where("name LIKE ? OR description LIKE ?", searchTerm, searchTerm).Find(&items)
-	if result.Error != nil {
-		http.Error(w, "Database error", http.StatusInternalServerError)
+	items, err := repository.SearchItems(keyword)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(templates.InternalServerErrorResponse{Error: "Database error"})
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-
 	json.NewEncoder(w).Encode(items)
 }
