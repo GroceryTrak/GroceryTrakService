@@ -1,12 +1,38 @@
 package routes
 
 import (
+	"os"
+
+	_ "github.com/GroceryTrak/GroceryTrakService/docs"
 	"github.com/GroceryTrak/GroceryTrakService/internal/handlers"
 	"github.com/GroceryTrak/GroceryTrakService/internal/middlewares"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/cors"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 func SetupRoutes(r *chi.Mux) {
+	env := os.Getenv("ENV")
+	frontendDomain := os.Getenv("FRONTEND_DOMAIN")
+
+	allowedOrigins := []string{"*"}
+	if env == "production" && frontendDomain != "" {
+		allowedOrigins = []string{frontendDomain}
+	}
+
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   allowedOrigins,
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Content-Type", "Authorization"},
+		AllowCredentials: true,
+	}))
+
+	r.Route("/swagger", func(r chi.Router) {
+		r.Get("/*", httpSwagger.Handler(
+			httpSwagger.URL("/swagger/doc.json"),
+		))
+	})
+
 	r.Route("/auth", func(r chi.Router) {
 		r.Post("/register", handlers.RegisterHandler)
 		r.Post("/login", handlers.LoginHandler)

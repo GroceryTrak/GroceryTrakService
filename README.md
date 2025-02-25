@@ -43,7 +43,7 @@ go install github.com/air-verse/air@latest
 ### **3️⃣ Running**
 Choice 1: Not using Air
 ```sh
-go run cmd/*.go
+go run main.go
 ```
 
 Choice 2: Using Air
@@ -53,6 +53,7 @@ air
 
 ## **Environment Variables**
 Before running, ensure your `.env` file contains the correct values:
+Change localhost to name of the container in `docker-compose.yaml` (db and redis) if running app with `docker-compose.yaml`
 ```ini
 DB_HOST=localhost
 DB_USER=admin
@@ -66,41 +67,11 @@ JWT_SECRET=8dd256ba6e1462d6e3439e51794cd5746455cbd1340af5eb15363181e7edc73a
 
 ENV=development
 FRONTEND_DOMAIN=
+DETECT_DOMAIN=https://grocerytrak-devs-grocerytrakdetect.hf.space
 ```
 
 ## **API Endpoints**
-
-#### Without Bearer Token ####
-
-| Method | Endpoint             | Description                |
-|--------|----------------------|----------------------------|
-| POST   | `/auth/register`     | Sign up user               |
-| POST   | `/auth/login`        | Sign in user               |
-
-| Method | Endpoint                       | Description                               |
-|--------|--------------------------------|-------------------------------------------|
-| GET    | `/item/{id}`                   | Fetch a item by ID                        |
-| POST   | `/item`                        | Create a new item                         |
-| PUT    | `/item/{id}`                   | Update an existing item                   |
-| DELETE | `/item/{id}`                   | Delete a item                             |
-| GET    | `/item/search?q=&ingredients=1`| Search an item by name, ingredients by ID |
-
-| Method | Endpoint             | Description                |
-|--------|----------------------|----------------------------|
-| GET    | `/recipe/{id}`       | Fetch a recipe by ID       |
-| POST   | `/recipe`            | Create a new recipe        |
-| PUT    | `/recipe/{id}`       | Update an existing recipe  |
-| DELETE | `/recipe/{id}`       | Delete a recipe            |
-| GET    | `/recipe/search?q=`  | Search a recipe by name    |
-
-#### With Bearer Token ####
-
-| Method | Endpoint             | Description                |
-|--------|----------------------|----------------------------|
-| GET    | `/user_item/{id}`    | Fetch user item by ID      |
-| POST   | `/user_item`         | Create new user item       |
-| PUT    | `/user_item/{id}`    | Update existing user item  |
-| DELETE | `/user_item/{id}`    | Delete user item           |
+Please run the app and check `/swagger/index.html`.
 
 ## **Contributing**
 Pull requests are welcome! For major changes, please open an issue first to discuss the proposed changes.

@@ -1,0 +1,128 @@
+definitions:
+  templates.AuthResponse:
+    properties:
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR...
+        type: string
+    type: object
+  templates.BadRequestResponse:
+    properties:
+      error:
+        example: Invalid request data
+        type: string
+    type: object
+  templates.ConflictResponse:
+    properties:
+      error:
+        example: User already exists
+        type: string
+    type: object
+  templates.ErrorResponse:
+    properties:
+      error:
+        example: An error occurred
+        type: string
+    type: object
+  templates.ForbiddenResponse:
+    properties:
+      error:
+        example: Access denied
+        type: string
+    type: object
+  templates.InternalServerErrorResponse:
+    properties:
+      error:
+        example: Internal server error
+        type: string
+    type: object
+  templates.LoginRequest:
+    properties:
+      password:
+        example: securepassword123
+        type: string
+      username:
+        example: john_doe
+        type: string
+    type: object
+  templates.NotFoundResponse:
+    properties:
+      error:
+        example: Resource not found
+        type: string
+    type: object
+  templates.RegisterRequest:
+    properties:
+      password:
+        example: securepassword123
+        type: string
+      username:
+        example: john_doe
+        type: string
+    type: object
+  templates.UnauthorizedResponse:
+    properties:
+      error:
+        example: Invalid credentials
+        type: string
+    type: object
+info:
+  contact:
+    email: grocerytrak@gmail.com
+    name: GroceryTrak
+  description: This is the API documentation for GroceryTrak.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: GroceryTrak API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Logs in a user and returns a JWT token
+      parameters:
+      - description: User Login Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/templates.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/templates.AuthResponse'
+        default:
+          description: Standard Error Responses
+          schema:
+            $ref: '#/definitions/templates.ErrorResponse'
+      summary: Authenticate a user
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user account
+      parameters:
+      - description: User Registration Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/templates.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        default:
+          description: Standard Error Responses
+          schema:
+            $ref: '#/definitions/templates.ErrorResponse'
+      summary: Register a new user
+      tags:
+      - auth
+swagger: "2.0"

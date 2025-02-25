@@ -7,6 +7,6 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o main ./cmd
+RUN go build -o tmp/main .
 
-CMD ["/app/main"]
+CMD ["/app/tmp/main"]

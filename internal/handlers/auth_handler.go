@@ -4,47 +4,70 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/GroceryTrak/GroceryTrakService/internal/models"
 	"github.com/GroceryTrak/GroceryTrakService/internal/repository"
+	"github.com/GroceryTrak/GroceryTrakService/internal/templates"
 	"github.com/GroceryTrak/GroceryTrakService/internal/utils"
 )
 
+// RegisterHandler handles user registration
+// @Summary Register a new user
+// @Description Creates a new user account
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body templates.RegisterRequest true "User Registration Request"
+// @Failure default {object} templates.ErrorResponse "Standard Error Responses"
+// @Router /auth/register [post]
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
-	var user models.User
-	err := json.NewDecoder(r.Body).Decode(&user)
-	if err != nil {
-		http.Error(w, "Invalid request", http.StatusBadRequest)
+	var req templates.RegisterRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(templates.BadRequestResponse{Error: "Invalid request format"})
 		return
 	}
 
-	err = repository.RegisterUser(user.Username, user.Password, user.Role)
+	err := repository.RegisterUser(req.Username, req.Password, "user") // Default role to "user"
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusConflict)
+		w.WriteHeader(http.StatusConflict)
+		json.NewEncoder(w).Encode(templates.ConflictResponse{Error: err.Error()})
 		return
 	}
 
-	w.Write([]byte("User registered successfully"))
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(templates.RegisterResponse{Message: "User registered successfully"})
 }
 
+// LoginHandler handles user login
+// @Summary Authenticate a user
+// @Description Logs in a user and returns a JWT token
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body templates.LoginRequest true "User Login Request"
+// @Success 200 {object} templates.AuthResponse
+// @Failure default {object} templates.ErrorResponse "Standard Error Responses"
+// @Router /auth/login [post]
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
-	var user models.User
-	err := json.NewDecoder(r.Body).Decode(&user)
-	if err != nil {
-		http.Error(w, "Invalid request", http.StatusBadRequest)
+	var req templates.LoginRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(templates.BadRequestResponse{Error: "Invalid request format"})
 		return
 	}
 
-	id, username, role, err := repository.AuthenticateUser(user.Username, user.Password)
+	id, username, role, err := repository.AuthenticateUser(req.Username, req.Password)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(templates.UnauthorizedResponse{Error: "Invalid credentials"})
 		return
 	}
 
 	token, err := utils.GenerateJWT(id, username, role)
 	if err != nil {
-		http.Error(w, "Could not generate token", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(templates.InternalServerErrorResponse{Error: "Could not generate token"})
 		return
 	}
 
-	w.Write([]byte(token))
+	json.NewEncoder(w).Encode(templates.AuthResponse{Token: token})
 }
