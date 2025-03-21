@@ -1,63 +1,72 @@
 definitions:
-  templates.BadRequestResponse:
+  dtos.BadRequestResponse:
     properties:
       error:
         example: Invalid request data
         type: string
     type: object
-  templates.ConflictResponse:
+  dtos.ConflictResponse:
     properties:
       error:
         example: User already exists
         type: string
     type: object
-  templates.ErrorResponse:
+  dtos.ErrorResponse:
     properties:
       error:
         example: An error occurred
         type: string
     type: object
-  templates.ForbiddenResponse:
+  dtos.ForbiddenResponse:
     properties:
       error:
         example: Access denied
         type: string
     type: object
-  templates.InternalServerErrorResponse:
+  dtos.InternalServerErrorResponse:
     properties:
       error:
         example: Internal server error
         type: string
     type: object
-  templates.ItemRequest:
+  dtos.ItemRequest:
     properties:
-      description:
-        example: Organic whole milk
-        type: string
-      name:
-        example: Milk
-        type: string
-    type: object
-  templates.ItemResponse:
-    properties:
-      description:
-        example: Organic whole milk
-        type: string
       id:
         example: 1
         type: integer
+      image:
+        example: milk.jpg
+        type: string
       name:
         example: Milk
         type: string
+      spoonacular_id:
+        example: 1
+        type: integer
     type: object
-  templates.ItemsResponse:
+  dtos.ItemResponse:
+    properties:
+      id:
+        example: 1
+        type: integer
+      image:
+        example: milk.jpg
+        type: string
+      name:
+        example: Milk
+        type: string
+      spoonacular_id:
+        example: 1
+        type: integer
+    type: object
+  dtos.ItemsResponse:
     properties:
       items:
         items:
-          $ref: '#/definitions/templates.ItemResponse'
+          $ref: '#/definitions/dtos.ItemResponse'
         type: array
     type: object
-  templates.LoginRequest:
+  dtos.LoginRequest:
     properties:
       password:
         example: securepassword123
@@ -66,19 +75,114 @@ definitions:
         example: john_doe
         type: string
     type: object
-  templates.LoginResponse:
+  dtos.LoginResponse:
     properties:
       token:
         example: eyJhbGciOiJIUzI1NiIsInR...
         type: string
     type: object
-  templates.NotFoundResponse:
+  dtos.NotFoundResponse:
     properties:
       error:
         example: Resource not found
         type: string
     type: object
-  templates.RegisterRequest:
+  dtos.RecipeItemRequest:
+    properties:
+      amount:
+        example: 2.5
+        type: number
+      item_id:
+        example: 456
+        type: integer
+      unit:
+        example: cups
+        type: string
+    type: object
+  dtos.RecipeItemResponse:
+    properties:
+      amount:
+        example: 2.5
+        type: number
+      item:
+        $ref: '#/definitions/dtos.ItemResponse'
+      unit:
+        example: cups
+        type: string
+    type: object
+  dtos.RecipeRequest:
+    properties:
+      cooking_time:
+        example: 20
+        type: integer
+      image:
+        example: https://example.com/spaghetti.jpg
+        type: string
+      ingredients:
+        items:
+          $ref: '#/definitions/dtos.RecipeItemRequest'
+        type: array
+      kcal:
+        example: 450.5
+        type: number
+      prep_time:
+        example: 10
+        type: integer
+      ready_time:
+        example: 30
+        type: integer
+      title:
+        example: Spaghetti Carbonara
+        type: string
+      vegan:
+        example: false
+        type: boolean
+      vegetarian:
+        example: false
+        type: boolean
+    type: object
+  dtos.RecipeResponse:
+    properties:
+      cooking_time:
+        example: 20
+        type: integer
+      id:
+        example: 1
+        type: integer
+      image:
+        example: https://example.com/spaghetti.jpg
+        type: string
+      ingredients:
+        items:
+          $ref: '#/definitions/dtos.RecipeItemResponse'
+        type: array
+      kcal:
+        example: 450.5
+        type: number
+      prep_time:
+        example: 10
+        type: integer
+      ready_time:
+        example: 30
+        type: integer
+      title:
+        example: Spaghetti Carbonara
+        type: string
+      vegan:
+        example: false
+        type: boolean
+      vegetarian:
+        example: false
+        type: boolean
+    type: object
+  dtos.RecipesResponse:
+    properties:
+      recipes:
+        items:
+          $ref: '#/definitions/dtos.RecipeResponse'
+        type: array
+    type: object
+  dtos.RegisterRequest:
     properties:
       password:
         example: securepassword123
@@ -87,11 +191,47 @@ definitions:
         example: john_doe
         type: string
     type: object
-  templates.UnauthorizedResponse:
+  dtos.RegisterResponse:
+    properties:
+      message:
+        example: User registered successfully
+        type: string
+    type: object
+  dtos.UnauthorizedResponse:
     properties:
       error:
         example: Invalid credentials
         type: string
+    type: object
+  dtos.UserItemRequest:
+    properties:
+      amount:
+        example: 2
+        type: number
+      item_id:
+        example: 456
+        type: integer
+      unit:
+        example: kg
+        type: string
+    type: object
+  dtos.UserItemResponse:
+    properties:
+      amount:
+        example: 2
+        type: number
+      item:
+        $ref: '#/definitions/dtos.ItemResponse'
+      unit:
+        example: kg
+        type: string
+    type: object
+  dtos.UserItemsResponse:
+    properties:
+      user_items:
+        items:
+          $ref: '#/definitions/dtos.UserItemResponse'
+        type: array
     type: object
 info:
   contact:
@@ -116,18 +256,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/templates.LoginRequest'
+          $ref: '#/definitions/dtos.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/templates.LoginResponse'
+            $ref: '#/definitions/dtos.LoginResponse'
         default:
           description: Standard Error Responses
           schema:
-            $ref: '#/definitions/templates.ErrorResponse'
+            $ref: '#/definitions/dtos.ErrorResponse'
       summary: Logs in a user
       tags:
       - auth
@@ -142,14 +282,18 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/templates.RegisterRequest'
+          $ref: '#/definitions/dtos.RegisterRequest'
       produces:
       - application/json
       responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dtos.RegisterResponse'
         default:
           description: Standard Error Responses
           schema:
-            $ref: '#/definitions/templates.ErrorResponse'
+            $ref: '#/definitions/dtos.ErrorResponse'
       summary: Register a new user
       tags:
       - auth
@@ -164,18 +308,18 @@ paths:
         name: item
         required: true
         schema:
-          $ref: '#/definitions/templates.ItemRequest'
+          $ref: '#/definitions/dtos.ItemRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/templates.ItemResponse'
+            $ref: '#/definitions/dtos.ItemResponse'
         default:
           description: Standard Error Responses
           schema:
-            $ref: '#/definitions/templates.ErrorResponse'
+            $ref: '#/definitions/dtos.ErrorResponse'
       summary: Create an item
       tags:
       - item
@@ -198,7 +342,7 @@ paths:
         default:
           description: Standard Error Responses
           schema:
-            $ref: '#/definitions/templates.ErrorResponse'
+            $ref: '#/definitions/dtos.ErrorResponse'
       summary: Delete an item
       tags:
       - item
@@ -218,11 +362,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/templates.ItemResponse'
+            $ref: '#/definitions/dtos.ItemResponse'
         default:
           description: Standard Error Responses
           schema:
-            $ref: '#/definitions/templates.ErrorResponse'
+            $ref: '#/definitions/dtos.ErrorResponse'
       summary: Get an item
       tags:
       - item
@@ -241,18 +385,18 @@ paths:
         name: item
         required: true
         schema:
-          $ref: '#/definitions/templates.ItemRequest'
+          $ref: '#/definitions/dtos.ItemRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/templates.ItemResponse'
+            $ref: '#/definitions/dtos.ItemResponse'
         default:
           description: Standard Error Responses
           schema:
-            $ref: '#/definitions/templates.ErrorResponse'
+            $ref: '#/definitions/dtos.ErrorResponse'
       summary: Update an item
       tags:
       - item
@@ -265,7 +409,7 @@ paths:
       parameters:
       - description: Search keyword
         in: query
-        name: q
+        name: name
         required: true
         type: string
       produces:
@@ -274,12 +418,309 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/templates.ItemsResponse'
+            $ref: '#/definitions/dtos.ItemsResponse'
         default:
           description: Standard Error Responses
           schema:
-            $ref: '#/definitions/templates.ErrorResponse'
+            $ref: '#/definitions/dtos.ErrorResponse'
       summary: Search items
       tags:
       - item
+  /recipe:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new recipe
+      parameters:
+      - description: Recipe Data
+        in: body
+        name: recipe
+        required: true
+        schema:
+          $ref: '#/definitions/dtos.RecipeRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dtos.RecipeResponse'
+        default:
+          description: Standard Error Responses
+          schema:
+            $ref: '#/definitions/dtos.ErrorResponse'
+      summary: Create a recipe
+      tags:
+      - recipe
+  /recipe/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a recipe by ID
+      parameters:
+      - description: Recipe ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        default:
+          description: Standard Error Responses
+          schema:
+            $ref: '#/definitions/dtos.ErrorResponse'
+      summary: Delete a recipe
+      tags:
+      - recipe
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a recipe by its ID
+      parameters:
+      - description: Recipe ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dtos.RecipeResponse'
+        default:
+          description: Standard Error Responses
+          schema:
+            $ref: '#/definitions/dtos.ErrorResponse'
+      summary: Get a recipe
+      tags:
+      - recipe
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing recipe by ID
+      parameters:
+      - description: Recipe ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated Recipe Data
+        in: body
+        name: recipe
+        required: true
+        schema:
+          $ref: '#/definitions/dtos.RecipeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dtos.RecipeResponse'
+        default:
+          description: Standard Error Responses
+          schema:
+            $ref: '#/definitions/dtos.ErrorResponse'
+      summary: Update a recipe
+      tags:
+      - recipe
+  /recipe/search:
+    get:
+      consumes:
+      - application/json
+      description: Searches for recipes by title, ingredients, or diet type
+      parameters:
+      - description: Title of recipe
+        in: query
+        name: title
+        type: string
+      - description: Comma-separated ingredient IDs
+        in: query
+        name: ingredients
+        type: string
+      - description: Diet type
+        in: query
+        name: diet
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dtos.RecipesResponse'
+        default:
+          description: Standard Error Responses
+          schema:
+            $ref: '#/definitions/dtos.ErrorResponse'
+      summary: Search recipes
+      tags:
+      - recipe
+  /user_item:
+    get:
+      description: Get all items for the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dtos.UserItemsResponse'
+        default:
+          description: Standard Error Responses
+          schema:
+            $ref: '#/definitions/dtos.ErrorResponse'
+      summary: Get all user's items
+      tags:
+      - user_item
+    post:
+      consumes:
+      - application/json
+      description: Create a new item for the authenticated user
+      parameters:
+      - description: Create User Item
+        in: body
+        name: userItem
+        required: true
+        schema:
+          $ref: '#/definitions/dtos.UserItemRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dtos.UserItemResponse'
+        default:
+          description: Standard Error Responses
+          schema:
+            $ref: '#/definitions/dtos.ErrorResponse'
+      summary: Create a new user_item for the authenticated user
+      tags:
+      - user_item
+  /user_item/{item_id}:
+    delete:
+      description: Delete a user_item for the authenticated user
+      parameters:
+      - description: Item ID
+        in: path
+        name: item_id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        default:
+          description: Standard Error Responses
+          schema:
+            $ref: '#/definitions/dtos.ErrorResponse'
+      summary: Delete a user_item for the authenticated user
+      tags:
+      - user_item
+    get:
+      description: Get a specific item for the authenticated user by item ID
+      parameters:
+      - description: Item ID
+        in: path
+        name: item_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dtos.UserItemResponse'
+        default:
+          description: Standard Error Responses
+          schema:
+            $ref: '#/definitions/dtos.ErrorResponse'
+      summary: Get a user's item by ItemID
+      tags:
+      - user_item
+    put:
+      consumes:
+      - application/json
+      description: Update a user_item for the authenticated user
+      parameters:
+      - description: Item ID
+        in: path
+        name: item_id
+        required: true
+        type: integer
+      - description: Update User Item
+        in: body
+        name: userItem
+        required: true
+        schema:
+          $ref: '#/definitions/dtos.UserItemRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dtos.UserItemResponse'
+        default:
+          description: Standard Error Responses
+          schema:
+            $ref: '#/definitions/dtos.ErrorResponse'
+      summary: Update a user_item for the authenticated user
+      tags:
+      - user_item
+  /user_item/predict:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Predict items from an uploaded image for the authenticated user
+      parameters:
+      - description: Image file
+        in: formData
+        name: image
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dtos.UserItemsResponse'
+        default:
+          description: Standard Error Responses
+          schema:
+            $ref: '#/definitions/dtos.ErrorResponse'
+      summary: Predict items from an uploaded image
+      tags:
+      - user_item
+  /user_item/search:
+    get:
+      consumes:
+      - application/json
+      description: Searches for user items by name
+      parameters:
+      - description: Name of user item
+        in: query
+        name: name
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dtos.UserItemsResponse'
+        default:
+          description: Standard Error Responses
+          schema:
+            $ref: '#/definitions/dtos.ErrorResponse'
+      summary: Search user items
+      tags:
+      - user_item
 swagger: "2.0"

@@ -18,12 +18,12 @@ import (
 // @license.name MIT
 // @license.url https://opensource.org/licenses/MIT
 
-// @response 400 {object} templates.BadRequestResponse "Bad Request"
-// @response 401 {object} templates.UnauthorizedResponse "Unauthorized"
-// @response 403 {object} templates.ForbiddenResponse "Forbidden"
-// @response 404 {object} templates.NotFoundResponse "Not Found"
-// @response 409 {object} templates.ConflictResponse "Conflict"
-// @response 500 {object} templates.InternalServerErrorResponse "Internal Server Error"
+// @response 400 {object} dtos.BadRequestResponse "Bad Request"
+// @response 401 {object} dtos.UnauthorizedResponse "Unauthorized"
+// @response 403 {object} dtos.ForbiddenResponse "Forbidden"
+// @response 404 {object} dtos.NotFoundResponse "Not Found"
+// @response 409 {object} dtos.ConflictResponse "Conflict"
+// @response 500 {object} dtos.InternalServerErrorResponse "Internal Server Error"
 func main() {
 	config.LoadConfig()
 	config.InitRedis()

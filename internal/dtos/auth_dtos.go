@@ -1,4 +1,4 @@
-package templates
+package dtos
 
 type RegisterRequest struct {
 	Username string `json:"username" example:"john_doe"`

@@ -13,7 +13,7 @@ Ensure you have the following installed:
 
 ### **Clone the Repository**
 ```sh
-git clone https://github.com/yourusername/GroceryTrakService.git
+git clone https://github.com/GroceryTrak/GroceryTrakService.git
 cd GroceryTrakService
 ```
 
@@ -53,7 +53,7 @@ air
 
 ## **Environment Variables**
 Before running, ensure your `.env` file contains the correct values:
-Change localhost to name of the container in `docker-compose.yaml` (db and redis) if running app with `docker-compose.yaml`
+Change localhost to **name of the container** in `docker-compose.yaml` (db and redis) if running app with `docker-compose.yaml`
 ```ini
 DB_HOST=localhost
 DB_USER=admin
@@ -66,8 +66,8 @@ REDIS_PASS=adminpassword
 JWT_SECRET=8dd256ba6e1462d6e3439e51794cd5746455cbd1340af5eb15363181e7edc73a
 
 ENV=development
-FRONTEND_DOMAIN=
-DETECT_DOMAIN=https://grocerytrak-devs-grocerytrakdetect.hf.space
+FLUTTER_URL=
+HUGGINGFACE_URL=https://grocerytrak-devs-grocerytrakdetect.hf.space
 ```
 
 ## **API Endpoints**

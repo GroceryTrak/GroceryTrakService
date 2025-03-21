@@ -57,7 +57,7 @@ func SetupRoutes(r *chi.Mux) {
 	r.Route("/user_item", func(r chi.Router) {
 		r.Use(middlewares.AuthMiddleware)
 
-		r.Get("/", handlers.GetAllUserItemHandler)
+		r.Get("/", handlers.GetAllUserItemsHandler)
 		r.Get("/{item_id}", handlers.GetUserItemHandler)
 		r.Post("/", handlers.CreateUserItemHandler)
 		r.Put("/{item_id}", handlers.UpdateUserItemHandler)

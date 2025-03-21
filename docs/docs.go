@@ -43,7 +43,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/templates.LoginRequest"
+                            "$ref": "#/definitions/dtos.LoginRequest"
                         }
                     }
                 ],
@@ -51,13 +51,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/templates.LoginResponse"
+                            "$ref": "#/definitions/dtos.LoginResponse"
                         }
                     },
                     "default": {
                         "description": "Standard Error Responses",
                         "schema": {
-                            "$ref": "#/definitions/templates.ErrorResponse"
+                            "$ref": "#/definitions/dtos.ErrorResponse"
                         }
                     }
                 }
@@ -83,15 +83,21 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/templates.RegisterRequest"
+                            "$ref": "#/definitions/dtos.RegisterRequest"
                         }
                     }
                 ],
                 "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.RegisterResponse"
+                        }
+                    },
                     "default": {
                         "description": "Standard Error Responses",
                         "schema": {
-                            "$ref": "#/definitions/templates.ErrorResponse"
+                            "$ref": "#/definitions/dtos.ErrorResponse"
                         }
                     }
                 }
@@ -117,7 +123,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/templates.ItemRequest"
+                            "$ref": "#/definitions/dtos.ItemRequest"
                         }
                     }
                 ],
@@ -125,13 +131,13 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/templates.ItemResponse"
+                            "$ref": "#/definitions/dtos.ItemResponse"
                         }
                     },
                     "default": {
                         "description": "Standard Error Responses",
                         "schema": {
-                            "$ref": "#/definitions/templates.ErrorResponse"
+                            "$ref": "#/definitions/dtos.ErrorResponse"
                         }
                     }
                 }
@@ -154,7 +160,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "Search keyword",
-                        "name": "q",
+                        "name": "name",
                         "in": "query",
                         "required": true
                     }
@@ -163,13 +169,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/templates.ItemsResponse"
+                            "$ref": "#/definitions/dtos.ItemsResponse"
                         }
                     },
                     "default": {
                         "description": "Standard Error Responses",
                         "schema": {
-                            "$ref": "#/definitions/templates.ErrorResponse"
+                            "$ref": "#/definitions/dtos.ErrorResponse"
                         }
                     }
                 }
@@ -201,13 +207,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/templates.ItemResponse"
+                            "$ref": "#/definitions/dtos.ItemResponse"
                         }
                     },
                     "default": {
                         "description": "Standard Error Responses",
                         "schema": {
-                            "$ref": "#/definitions/templates.ErrorResponse"
+                            "$ref": "#/definitions/dtos.ErrorResponse"
                         }
                     }
                 }
@@ -238,7 +244,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/templates.ItemRequest"
+                            "$ref": "#/definitions/dtos.ItemRequest"
                         }
                     }
                 ],
@@ -246,13 +252,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/templates.ItemResponse"
+                            "$ref": "#/definitions/dtos.ItemResponse"
                         }
                     },
                     "default": {
                         "description": "Standard Error Responses",
                         "schema": {
-                            "$ref": "#/definitions/templates.ErrorResponse"
+                            "$ref": "#/definitions/dtos.ErrorResponse"
                         }
                     }
                 }
@@ -285,7 +291,458 @@ const docTemplate = `{
                     "default": {
                         "description": "Standard Error Responses",
                         "schema": {
-                            "$ref": "#/definitions/templates.ErrorResponse"
+                            "$ref": "#/definitions/dtos.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/recipe": {
+            "post": {
+                "description": "Creates a new recipe",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "recipe"
+                ],
+                "summary": "Create a recipe",
+                "parameters": [
+                    {
+                        "description": "Recipe Data",
+                        "name": "recipe",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dtos.RecipeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.RecipeResponse"
+                        }
+                    },
+                    "default": {
+                        "description": "Standard Error Responses",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/recipe/search": {
+            "get": {
+                "description": "Searches for recipes by title, ingredients, or diet type",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "recipe"
+                ],
+                "summary": "Search recipes",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Title of recipe",
+                        "name": "title",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma-separated ingredient IDs",
+                        "name": "ingredients",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Diet type",
+                        "name": "diet",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.RecipesResponse"
+                        }
+                    },
+                    "default": {
+                        "description": "Standard Error Responses",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/recipe/{id}": {
+            "get": {
+                "description": "Retrieves a recipe by its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "recipe"
+                ],
+                "summary": "Get a recipe",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Recipe ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.RecipeResponse"
+                        }
+                    },
+                    "default": {
+                        "description": "Standard Error Responses",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Updates an existing recipe by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "recipe"
+                ],
+                "summary": "Update a recipe",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Recipe ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated Recipe Data",
+                        "name": "recipe",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dtos.RecipeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.RecipeResponse"
+                        }
+                    },
+                    "default": {
+                        "description": "Standard Error Responses",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes a recipe by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "recipe"
+                ],
+                "summary": "Delete a recipe",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Recipe ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "default": {
+                        "description": "Standard Error Responses",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/user_item": {
+            "get": {
+                "description": "Get all items for the authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user_item"
+                ],
+                "summary": "Get all user's items",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.UserItemsResponse"
+                        }
+                    },
+                    "default": {
+                        "description": "Standard Error Responses",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create a new item for the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user_item"
+                ],
+                "summary": "Create a new user_item for the authenticated user",
+                "parameters": [
+                    {
+                        "description": "Create User Item",
+                        "name": "userItem",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dtos.UserItemRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.UserItemResponse"
+                        }
+                    },
+                    "default": {
+                        "description": "Standard Error Responses",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/user_item/predict": {
+            "post": {
+                "description": "Predict items from an uploaded image for the authenticated user",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user_item"
+                ],
+                "summary": "Predict items from an uploaded image",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Image file",
+                        "name": "image",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.UserItemsResponse"
+                        }
+                    },
+                    "default": {
+                        "description": "Standard Error Responses",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/user_item/search": {
+            "get": {
+                "description": "Searches for user items by name",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user_item"
+                ],
+                "summary": "Search user items",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Name of user item",
+                        "name": "name",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.UserItemsResponse"
+                        }
+                    },
+                    "default": {
+                        "description": "Standard Error Responses",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/user_item/{item_id}": {
+            "get": {
+                "description": "Get a specific item for the authenticated user by item ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user_item"
+                ],
+                "summary": "Get a user's item by ItemID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Item ID",
+                        "name": "item_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.UserItemResponse"
+                        }
+                    },
+                    "default": {
+                        "description": "Standard Error Responses",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Update a user_item for the authenticated user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user_item"
+                ],
+                "summary": "Update a user_item for the authenticated user",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Item ID",
+                        "name": "item_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update User Item",
+                        "name": "userItem",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dtos.UserItemRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.UserItemResponse"
+                        }
+                    },
+                    "default": {
+                        "description": "Standard Error Responses",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete a user_item for the authenticated user",
+                "tags": [
+                    "user_item"
+                ],
+                "summary": "Delete a user_item for the authenticated user",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Item ID",
+                        "name": "item_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "default": {
+                        "description": "Standard Error Responses",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ErrorResponse"
                         }
                     }
                 }
@@ -293,7 +750,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "templates.BadRequestResponse": {
+        "dtos.BadRequestResponse": {
             "type": "object",
             "properties": {
                 "error": {
@@ -302,7 +759,7 @@ const docTemplate = `{
                 }
             }
         },
-        "templates.ConflictResponse": {
+        "dtos.ConflictResponse": {
             "type": "object",
             "properties": {
                 "error": {
@@ -311,7 +768,7 @@ const docTemplate = `{
                 }
             }
         },
-        "templates.ErrorResponse": {
+        "dtos.ErrorResponse": {
             "type": "object",
             "properties": {
                 "error": {
@@ -320,7 +777,7 @@ const docTemplate = `{
                 }
             }
         },
-        "templates.ForbiddenResponse": {
+        "dtos.ForbiddenResponse": {
             "type": "object",
             "properties": {
                 "error": {
@@ -329,7 +786,7 @@ const docTemplate = `{
                 }
             }
         },
-        "templates.InternalServerErrorResponse": {
+        "dtos.InternalServerErrorResponse": {
             "type": "object",
             "properties": {
                 "error": {
@@ -338,48 +795,60 @@ const docTemplate = `{
                 }
             }
         },
-        "templates.ItemRequest": {
+        "dtos.ItemRequest": {
             "type": "object",
             "properties": {
-                "description": {
-                    "type": "string",
-                    "example": "Organic whole milk"
-                },
-                "name": {
-                    "type": "string",
-                    "example": "Milk"
-                }
-            }
-        },
-        "templates.ItemResponse": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string",
-                    "example": "Organic whole milk"
-                },
                 "id": {
                     "type": "integer",
                     "example": 1
                 },
+                "image": {
+                    "type": "string",
+                    "example": "milk.jpg"
+                },
                 "name": {
                     "type": "string",
                     "example": "Milk"
+                },
+                "spoonacular_id": {
+                    "type": "integer",
+                    "example": 1
                 }
             }
         },
-        "templates.ItemsResponse": {
+        "dtos.ItemResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "image": {
+                    "type": "string",
+                    "example": "milk.jpg"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Milk"
+                },
+                "spoonacular_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "dtos.ItemsResponse": {
             "type": "object",
             "properties": {
                 "items": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/templates.ItemResponse"
+                        "$ref": "#/definitions/dtos.ItemResponse"
                     }
                 }
             }
         },
-        "templates.LoginRequest": {
+        "dtos.LoginRequest": {
             "type": "object",
             "properties": {
                 "password": {
@@ -392,7 +861,7 @@ const docTemplate = `{
                 }
             }
         },
-        "templates.LoginResponse": {
+        "dtos.LoginResponse": {
             "type": "object",
             "properties": {
                 "token": {
@@ -401,7 +870,7 @@ const docTemplate = `{
                 }
             }
         },
-        "templates.NotFoundResponse": {
+        "dtos.NotFoundResponse": {
             "type": "object",
             "properties": {
                 "error": {
@@ -410,7 +879,141 @@ const docTemplate = `{
                 }
             }
         },
-        "templates.RegisterRequest": {
+        "dtos.RecipeItemRequest": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "example": 2.5
+                },
+                "item_id": {
+                    "type": "integer",
+                    "example": 456
+                },
+                "unit": {
+                    "type": "string",
+                    "example": "cups"
+                }
+            }
+        },
+        "dtos.RecipeItemResponse": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "example": 2.5
+                },
+                "item": {
+                    "$ref": "#/definitions/dtos.ItemResponse"
+                },
+                "unit": {
+                    "type": "string",
+                    "example": "cups"
+                }
+            }
+        },
+        "dtos.RecipeRequest": {
+            "type": "object",
+            "properties": {
+                "cooking_time": {
+                    "type": "integer",
+                    "example": 20
+                },
+                "image": {
+                    "type": "string",
+                    "example": "https://example.com/spaghetti.jpg"
+                },
+                "ingredients": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dtos.RecipeItemRequest"
+                    }
+                },
+                "kcal": {
+                    "type": "number",
+                    "example": 450.5
+                },
+                "prep_time": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "ready_time": {
+                    "type": "integer",
+                    "example": 30
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Spaghetti Carbonara"
+                },
+                "vegan": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "vegetarian": {
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "dtos.RecipeResponse": {
+            "type": "object",
+            "properties": {
+                "cooking_time": {
+                    "type": "integer",
+                    "example": 20
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "image": {
+                    "type": "string",
+                    "example": "https://example.com/spaghetti.jpg"
+                },
+                "ingredients": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dtos.RecipeItemResponse"
+                    }
+                },
+                "kcal": {
+                    "type": "number",
+                    "example": 450.5
+                },
+                "prep_time": {
+                    "type": "integer",
+                    "example": 10
+                },
+                "ready_time": {
+                    "type": "integer",
+                    "example": 30
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Spaghetti Carbonara"
+                },
+                "vegan": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "vegetarian": {
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "dtos.RecipesResponse": {
+            "type": "object",
+            "properties": {
+                "recipes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dtos.RecipeResponse"
+                    }
+                }
+            }
+        },
+        "dtos.RegisterRequest": {
             "type": "object",
             "properties": {
                 "password": {
@@ -423,12 +1026,65 @@ const docTemplate = `{
                 }
             }
         },
-        "templates.UnauthorizedResponse": {
+        "dtos.RegisterResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "User registered successfully"
+                }
+            }
+        },
+        "dtos.UnauthorizedResponse": {
             "type": "object",
             "properties": {
                 "error": {
                     "type": "string",
                     "example": "Invalid credentials"
+                }
+            }
+        },
+        "dtos.UserItemRequest": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "example": 2
+                },
+                "item_id": {
+                    "type": "integer",
+                    "example": 456
+                },
+                "unit": {
+                    "type": "string",
+                    "example": "kg"
+                }
+            }
+        },
+        "dtos.UserItemResponse": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "example": 2
+                },
+                "item": {
+                    "$ref": "#/definitions/dtos.ItemResponse"
+                },
+                "unit": {
+                    "type": "string",
+                    "example": "kg"
+                }
+            }
+        },
+        "dtos.UserItemsResponse": {
+            "type": "object",
+            "properties": {
+                "user_items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dtos.UserItemResponse"
+                    }
                 }
             }
         }

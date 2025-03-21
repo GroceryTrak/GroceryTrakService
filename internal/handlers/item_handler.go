@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/GroceryTrak/GroceryTrakService/internal/dtos"
 	"github.com/GroceryTrak/GroceryTrakService/internal/repository"
-	"github.com/GroceryTrak/GroceryTrakService/internal/templates"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -16,8 +16,8 @@ import (
 // @Accept json
 // @Produce json
 // @Param id path int true "Item ID"
-// @Success 200 {object} templates.ItemResponse
-// @Failure default {object} templates.ErrorResponse "Standard Error Responses"
+// @Success 200 {object} dtos.ItemResponse
+// @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
 // @Router /item/{id} [get]
 func GetItemHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 32)
@@ -29,7 +29,7 @@ func GetItemHandler(w http.ResponseWriter, r *http.Request) {
 	item, err := repository.GetItem(uint(id))
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(templates.NotFoundResponse{Error: "Item not found"})
+		json.NewEncoder(w).Encode(dtos.NotFoundResponse{Error: "Item not found"})
 		return
 	}
 
@@ -42,22 +42,22 @@ func GetItemHandler(w http.ResponseWriter, r *http.Request) {
 // @Tags item
 // @Accept json
 // @Produce json
-// @Param item body templates.ItemRequest true "New Item"
-// @Success 201 {object} templates.ItemResponse
-// @Failure default {object} templates.ErrorResponse "Standard Error Responses"
+// @Param item body dtos.ItemRequest true "New Item"
+// @Success 201 {object} dtos.ItemResponse
+// @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
 // @Router /item [post]
 func CreateItemHandler(w http.ResponseWriter, r *http.Request) {
-	var newItem templates.ItemRequest
+	var newItem dtos.ItemRequest
 	if err := json.NewDecoder(r.Body).Decode(&newItem); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(templates.BadRequestResponse{Error: "Invalid request data"})
+		json.NewEncoder(w).Encode(dtos.BadRequestResponse{Error: "Invalid request data"})
 		return
 	}
 
 	createdItem, err := repository.CreateItem(newItem)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(templates.InternalServerErrorResponse{Error: "Failed to create item"})
+		json.NewEncoder(w).Encode(dtos.InternalServerErrorResponse{Error: "Failed to create item"})
 		return
 	}
 
@@ -72,29 +72,29 @@ func CreateItemHandler(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param id path int true "Item ID"
-// @Param item body templates.ItemRequest true "Updated Item Data"
-// @Success 200 {object} templates.ItemResponse
-// @Failure default {object} templates.ErrorResponse "Standard Error Responses"
+// @Param item body dtos.ItemRequest true "Updated Item Data"
+// @Success 200 {object} dtos.ItemResponse
+// @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
 // @Router /item/{id} [put]
 func UpdateItemHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 32)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(templates.BadRequestResponse{Error: "Invalid item ID"})
+		json.NewEncoder(w).Encode(dtos.BadRequestResponse{Error: "Invalid item ID"})
 		return
 	}
 
-	var updatedItem templates.ItemRequest
+	var updatedItem dtos.ItemRequest
 	if err := json.NewDecoder(r.Body).Decode(&updatedItem); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(templates.BadRequestResponse{Error: "Invalid request data"})
+		json.NewEncoder(w).Encode(dtos.BadRequestResponse{Error: "Invalid request data"})
 		return
 	}
 
 	item, err := repository.UpdateItem(uint(id), updatedItem)
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(templates.NotFoundResponse{Error: "Item not found"})
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(dtos.InternalServerErrorResponse{Error: "Failed to update item"})
 		return
 	}
 
@@ -109,19 +109,19 @@ func UpdateItemHandler(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param id path int true "Item ID"
 // @Success 204 "No Content"
-// @Failure default {object} templates.ErrorResponse "Standard Error Responses"
+// @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
 // @Router /item/{id} [delete]
 func DeleteItemHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 32)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(templates.BadRequestResponse{Error: "Invalid item ID"})
+		json.NewEncoder(w).Encode(dtos.BadRequestResponse{Error: "Invalid item ID"})
 		return
 	}
 
 	if err := repository.DeleteItem(uint(id)); err != nil {
 		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(templates.NotFoundResponse{Error: "Item not found"})
+		json.NewEncoder(w).Encode(dtos.NotFoundResponse{Error: "Item not found"})
 		return
 	}
 
@@ -133,22 +133,22 @@ func DeleteItemHandler(w http.ResponseWriter, r *http.Request) {
 // @Tags item
 // @Accept json
 // @Produce json
-// @Param q query string true "Search keyword"
-// @Success 200 {object} templates.ItemsResponse
-// @Failure default {object} templates.ErrorResponse "Standard Error Responses"
+// @Param name query string true "Search keyword"
+// @Success 200 {object} dtos.ItemsResponse
+// @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
 // @Router /item/search [get]
 func SearchItemsHandler(w http.ResponseWriter, r *http.Request) {
-	keyword := r.URL.Query().Get("q")
+	keyword := r.URL.Query().Get("name")
 	if keyword == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(templates.BadRequestResponse{Error: "Search keyword is required"})
+		json.NewEncoder(w).Encode(dtos.BadRequestResponse{Error: "Search keyword is required"})
 		return
 	}
 
 	items, err := repository.SearchItems(keyword)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(templates.InternalServerErrorResponse{Error: "Database error"})
+		json.NewEncoder(w).Encode(dtos.InternalServerErrorResponse{Error: "Database error"})
 		return
 	}
 

@@ -4,44 +4,46 @@ import (
 	"errors"
 
 	"github.com/GroceryTrak/GroceryTrakService/config"
+	"github.com/GroceryTrak/GroceryTrakService/internal/dtos"
 	"github.com/GroceryTrak/GroceryTrakService/internal/models"
 	"github.com/GroceryTrak/GroceryTrakService/internal/utils"
 )
 
-func RegisterUser(username, password string, role models.Role) error {
+func RegisterUser(req dtos.RegisterRequest, role models.Role) (dtos.RegisterResponse, error) {
 	var existingUser models.User
-	result := config.DB.Where("username = ?", username).First(&existingUser)
-	if result.Error == nil {
-		return errors.New("user already exists")
+	result := config.DB.Where("username = ?", req.Username).First(&existingUser).Error
+	if result == nil {
+		return dtos.RegisterResponse{}, errors.New("user already exists")
 	}
 
-	// Hash the password
-	hashedPassword := utils.HashPassword(password)
-
 	user := models.User{
-		Username: username,
-		Password: hashedPassword,
+		Username: req.Username,
+		Password: utils.HashPassword(req.Password),
 		Role:     "user",
 	}
 
-	// Save user to PostgreSQL
 	if err := config.DB.Create(&user).Error; err != nil {
-		return err
+		return dtos.RegisterResponse{}, err
 	}
-	return nil
+
+	return dtos.RegisterResponse{Message: "User registered successfully"}, nil
 }
 
-func AuthenticateUser(username, password string) (uint, string, models.Role, error) {
+func LoginUser(req dtos.LoginRequest) (dtos.LoginResponse, error) {
 	var user models.User
-	result := config.DB.Where("username = ?", username).First(&user)
+	result := config.DB.Where("username = ?", req.Username).First(&user)
 	if result.Error != nil {
-		return 0, "", "", errors.New("user not found")
+		return dtos.LoginResponse{}, errors.New("user not found")
 	}
 
-	// Verify password
-	if !utils.CheckPassword(password, user.Password) {
-		return 0, "", "", errors.New("invalid credentials")
+	if !utils.CheckPassword(req.Password, user.Password) {
+		return dtos.LoginResponse{}, errors.New("invalid credentials")
 	}
 
-	return user.ID, user.Username, user.Role, nil
+	token, err := utils.GenerateJWT(user.ID, user.Username, user.Role)
+	if err != nil {
+		return dtos.LoginResponse{}, errors.New("could not generate token")
+	}
+
+	return dtos.LoginResponse{Token: token}, nil
 }

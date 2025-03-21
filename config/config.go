@@ -67,7 +67,6 @@ func InitPostgreSQL() {
 	// Create ENUM types if they don't exist
 	enums := []string{
 		"role AS ENUM ('user', 'admin')",
-		"difficulty AS ENUM ('easy', 'medium', 'hard')",
 	}
 
 	for _, enum := range enums {
