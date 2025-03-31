@@ -11,6 +11,14 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+type RecipeHandler struct {
+	Repo repository.RecipeRepository
+}
+
+func NewRecipeHandler(repo repository.RecipeRepository) *RecipeHandler {
+	return &RecipeHandler{Repo: repo}
+}
+
 // @Summary Get a recipe
 // @Description Retrieves a recipe by its ID
 // @Tags recipe
@@ -20,7 +28,7 @@ import (
 // @Success 200 {object} dtos.RecipeResponse
 // @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
 // @Router /recipe/{id} [get]
-func GetRecipeHandler(w http.ResponseWriter, r *http.Request) {
+func (h *RecipeHandler) GetRecipeHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 32)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -28,7 +36,7 @@ func GetRecipeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	recipe, err := repository.GetRecipe(uint(id))
+	recipe, err := h.Repo.GetRecipe(uint(id))
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(dtos.NotFoundResponse{Error: "Recipe not found"})
@@ -48,7 +56,7 @@ func GetRecipeHandler(w http.ResponseWriter, r *http.Request) {
 // @Success 201 {object} dtos.RecipeResponse
 // @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
 // @Router /recipe [post]
-func CreateRecipeHandler(w http.ResponseWriter, r *http.Request) {
+func (h *RecipeHandler) CreateRecipeHandler(w http.ResponseWriter, r *http.Request) {
 	var req dtos.RecipeRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -56,7 +64,7 @@ func CreateRecipeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	recipe, err := repository.CreateRecipe(req)
+	recipe, err := h.Repo.CreateRecipe(req)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(dtos.InternalServerErrorResponse{Error: "Failed to create recipe"})
@@ -78,7 +86,7 @@ func CreateRecipeHandler(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} dtos.RecipeResponse
 // @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
 // @Router /recipe/{id} [put]
-func UpdateRecipeHandler(w http.ResponseWriter, r *http.Request) {
+func (h *RecipeHandler) UpdateRecipeHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 32)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -93,7 +101,7 @@ func UpdateRecipeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	recipe, err := repository.UpdateRecipe(uint(id), req)
+	recipe, err := h.Repo.UpdateRecipe(uint(id), req)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(dtos.InternalServerErrorResponse{Error: "Failed to update recipe"})
@@ -113,7 +121,7 @@ func UpdateRecipeHandler(w http.ResponseWriter, r *http.Request) {
 // @Success 204
 // @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
 // @Router /recipe/{id} [delete]
-func DeleteRecipeHandler(w http.ResponseWriter, r *http.Request) {
+func (h *RecipeHandler) DeleteRecipeHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 32)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -121,7 +129,7 @@ func DeleteRecipeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := repository.DeleteRecipe(uint(id)); err != nil {
+	if err := h.Repo.DeleteRecipe(uint(id)); err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(dtos.NotFoundResponse{Error: "Recipe not found"})
 		return
@@ -141,13 +149,13 @@ func DeleteRecipeHandler(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} dtos.RecipesResponse
 // @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
 // @Router /recipe/search [get]
-func SearchRecipesHandler(w http.ResponseWriter, r *http.Request) {
+func (h *RecipeHandler) SearchRecipesHandler(w http.ResponseWriter, r *http.Request) {
 	query := dtos.RecipeQuery{}
 	query.Title = r.URL.Query().Get("title")
 	query.Diet = r.URL.Query().Get("diet")
 	query.Ingredients = strings.Split(r.URL.Query().Get("ingredients"), ",")
 
-	recipes, err := repository.SearchRecipes(query)
+	recipes, err := h.Repo.SearchRecipes(query)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(dtos.InternalServerErrorResponse{Error: "Database error"})

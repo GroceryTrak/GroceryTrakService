@@ -10,13 +10,19 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/GroceryTrak/GroceryTrakService/config"
 	"github.com/GroceryTrak/GroceryTrakService/internal/dtos"
 	"github.com/GroceryTrak/GroceryTrakService/internal/middlewares"
-	"github.com/GroceryTrak/GroceryTrakService/internal/models"
 	"github.com/GroceryTrak/GroceryTrakService/internal/repository"
 	"github.com/go-chi/chi/v5"
 )
+
+type UserItemHandler struct {
+	Repo repository.UserItemRepository
+}
+
+func NewUserItemHandler(repo repository.UserItemRepository) *UserItemHandler {
+	return &UserItemHandler{Repo: repo}
+}
 
 // @Summary Get all user's items
 // @Description Get all items for the authenticated user
@@ -25,10 +31,10 @@ import (
 // @Success 200 {object} dtos.UserItemsResponse
 // @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
 // @Router /user_item [get]
-func GetAllUserItemsHandler(w http.ResponseWriter, r *http.Request) {
+func (h *UserItemHandler) GetAllUserItemsHandler(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value(middlewares.IDKey).(uint)
 
-	userItems, err := repository.GetAllUserItems(userID)
+	userItems, err := h.Repo.GetAllUserItems(userID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(dtos.ErrorResponse{Error: "Failed to fetch user items"})
@@ -47,7 +53,7 @@ func GetAllUserItemsHandler(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} dtos.UserItemResponse
 // @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
 // @Router /user_item/{item_id} [get]
-func GetUserItemHandler(w http.ResponseWriter, r *http.Request) {
+func (h *UserItemHandler) GetUserItemHandler(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value(middlewares.IDKey).(uint)
 
 	itemID, err := strconv.ParseUint(chi.URLParam(r, "item_id"), 10, 32)
@@ -57,8 +63,7 @@ func GetUserItemHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userItem, err := repository.GetUserItem(uint(itemID), userID)
-
+	userItem, err := h.Repo.GetUserItem(uint(itemID), userID)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(dtos.NotFoundResponse{Error: "User item not found"})
@@ -78,7 +83,7 @@ func GetUserItemHandler(w http.ResponseWriter, r *http.Request) {
 // @Success 201 {object} dtos.UserItemResponse
 // @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
 // @Router /user_item [post]
-func CreateUserItemHandler(w http.ResponseWriter, r *http.Request) {
+func (h *UserItemHandler) CreateUserItemHandler(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value(middlewares.IDKey).(uint)
 
 	var req dtos.UserItemRequest
@@ -88,7 +93,7 @@ func CreateUserItemHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userItem, err := repository.CreateUserItem(req, userID)
+	userItem, err := h.Repo.CreateUserItem(req, userID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(dtos.InternalServerErrorResponse{Error: "Failed to create user item"})
@@ -110,7 +115,7 @@ func CreateUserItemHandler(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} dtos.UserItemResponse
 // @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
 // @Router /user_item/{item_id} [put]
-func UpdateUserItemHandler(w http.ResponseWriter, r *http.Request) {
+func (h *UserItemHandler) UpdateUserItemHandler(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value(middlewares.IDKey).(uint)
 
 	itemID, err := strconv.ParseUint(chi.URLParam(r, "item_id"), 10, 32)
@@ -127,7 +132,7 @@ func UpdateUserItemHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userItem, err := repository.UpdateUserItem(req, uint(itemID), userID)
+	userItem, err := h.Repo.UpdateUserItem(req, uint(itemID), userID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(dtos.InternalServerErrorResponse{Error: "Failed to update user item"})
@@ -145,7 +150,7 @@ func UpdateUserItemHandler(w http.ResponseWriter, r *http.Request) {
 // @Success 204
 // @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
 // @Router /user_item/{item_id} [delete]
-func DeleteUserItemHandler(w http.ResponseWriter, r *http.Request) {
+func (h *UserItemHandler) DeleteUserItemHandler(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value(middlewares.IDKey).(uint)
 
 	itemID, err := strconv.ParseUint(chi.URLParam(r, "item_id"), 10, 32)
@@ -155,7 +160,7 @@ func DeleteUserItemHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = repository.DeleteUserItem(uint(itemID), userID)
+	err = h.Repo.DeleteUserItem(uint(itemID), userID)
 	if err != nil {
 		http.Error(w, "Failed to delete user_item", http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(dtos.ErrorResponse{Error: "Failed to delete user_item"})
@@ -174,12 +179,12 @@ func DeleteUserItemHandler(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} dtos.UserItemsResponse
 // @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
 // @Router /user_item/search [get]
-func SearchUserItemsHandler(w http.ResponseWriter, r *http.Request) {
+func (h *UserItemHandler) SearchUserItemsHandler(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value(middlewares.IDKey).(uint)
 
 	query := dtos.UserItemQuery{}
 	query.Name = r.URL.Query().Get("name")
-	userItems, err := repository.SearchUserItems(query, userID)
+	userItems, err := h.Repo.SearchUserItems(query, userID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(dtos.InternalServerErrorResponse{Error: "Database error"})
@@ -199,7 +204,7 @@ func SearchUserItemsHandler(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} dtos.UserItemsResponse
 // @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
 // @Router /user_item/predict [post]
-func PredictUserItemsHandler(w http.ResponseWriter, r *http.Request) {
+func (h *UserItemHandler) PredictUserItemsHandler(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value(middlewares.IDKey).(uint)
 
 	err := r.ParseMultipartForm(10 << 20)
@@ -278,34 +283,11 @@ func PredictUserItemsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var result []models.UserItem
-
-	for _, class := range response.Items {
-		if class == "" {
-			continue
-		}
-
-		var existingItem models.Item
-		if err := config.DB.Where("name LIKE ?", "%"+class+"%").First(&existingItem).Error; err == nil {
-		} else {
-			newItem := models.Item{
-				Name:  class,
-				Image: "",
-			}
-			config.DB.Create(&newItem)
-			existingItem = newItem
-		}
-
-		userItem := models.UserItem{
-			UserID: userID,
-			ItemID: existingItem.ID,
-		}
-		result = append(result, userItem)
-
-		var existingUserItem models.UserItem
-		if err := config.DB.Where("user_id = ? AND item_id = ?", userItem.UserID, userItem.ItemID).First(&existingUserItem).Error; err != nil {
-			config.DB.Create(&userItem)
-		}
+	result, err := h.Repo.PredictUserItems(response.Items, userID)
+	if err != nil {
+		http.Error(w, "Failed to process prediction results", http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(dtos.ErrorResponse{Error: "Failed to process prediction results"})
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")

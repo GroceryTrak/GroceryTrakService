@@ -7,9 +7,26 @@ import (
 	"github.com/GroceryTrak/GroceryTrakService/config"
 	"github.com/GroceryTrak/GroceryTrakService/internal/dtos"
 	"github.com/GroceryTrak/GroceryTrakService/internal/models"
+	"gorm.io/gorm"
 )
 
-func GetRecipe(id uint) (*dtos.RecipeResponse, error) {
+type RecipeRepository interface {
+	GetRecipe(id uint) (*dtos.RecipeResponse, error)
+	CreateRecipe(req dtos.RecipeRequest) (*dtos.RecipeResponse, error)
+	UpdateRecipe(id uint, req dtos.RecipeRequest) (*dtos.RecipeResponse, error)
+	DeleteRecipe(id uint) error
+	SearchRecipes(query dtos.RecipeQuery) (dtos.RecipesResponse, error)
+}
+
+type RecipeRepositoryImpl struct {
+	db *gorm.DB
+}
+
+func NewRecipeRepository(db *gorm.DB) RecipeRepository {
+	return &RecipeRepositoryImpl{db: db}
+}
+
+func (r *RecipeRepositoryImpl) GetRecipe(id uint) (*dtos.RecipeResponse, error) {
 	var recipe models.Recipe
 	if err := config.DB.Preload("Ingredients.Item").First(&recipe, id).Error; err != nil {
 		return nil, err
@@ -42,7 +59,7 @@ func GetRecipe(id uint) (*dtos.RecipeResponse, error) {
 	}, nil
 }
 
-func CreateRecipe(req dtos.RecipeRequest) (*dtos.RecipeResponse, error) {
+func (r *RecipeRepositoryImpl) CreateRecipe(req dtos.RecipeRequest) (*dtos.RecipeResponse, error) {
 	recipe := models.Recipe{
 		Title:       req.Title,
 		ReadyTime:   req.ReadyTime,
@@ -99,7 +116,7 @@ func CreateRecipe(req dtos.RecipeRequest) (*dtos.RecipeResponse, error) {
 	}, nil
 }
 
-func UpdateRecipe(id uint, req dtos.RecipeRequest) (*dtos.RecipeResponse, error) {
+func (r *RecipeRepositoryImpl) UpdateRecipe(id uint, req dtos.RecipeRequest) (*dtos.RecipeResponse, error) {
 	var recipe models.Recipe
 	if err := config.DB.Preload("Ingredients.Item").First(&recipe, id).Error; err != nil {
 		return nil, err
@@ -146,14 +163,14 @@ func UpdateRecipe(id uint, req dtos.RecipeRequest) (*dtos.RecipeResponse, error)
 	}, nil
 }
 
-func DeleteRecipe(id uint) error {
+func (r *RecipeRepositoryImpl) DeleteRecipe(id uint) error {
 	if err := config.DB.Delete(&models.Recipe{}, id).Error; err != nil {
 		return err
 	}
 	return nil
 }
 
-func SearchRecipes(query dtos.RecipeQuery) (dtos.RecipesResponse, error) {
+func (r *RecipeRepositoryImpl) SearchRecipes(query dtos.RecipeQuery) (dtos.RecipesResponse, error) {
 	var recipes []models.Recipe
 
 	if query.Title != "" {

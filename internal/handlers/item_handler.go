@@ -10,6 +10,14 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+type ItemHandler struct {
+	Repo repository.ItemRepository
+}
+
+func NewItemHandler(repo repository.ItemRepository) *ItemHandler {
+	return &ItemHandler{Repo: repo}
+}
+
 // @Summary Get an item
 // @Description Get an item by its ID
 // @Tags item
@@ -19,14 +27,14 @@ import (
 // @Success 200 {object} dtos.ItemResponse
 // @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
 // @Router /item/{id} [get]
-func GetItemHandler(w http.ResponseWriter, r *http.Request) {
+func (h *ItemHandler) GetItemHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 32)
 	if err != nil {
 		http.Error(w, "Invalid item ID", http.StatusBadRequest)
 		return
 	}
 
-	item, err := repository.GetItem(uint(id))
+	item, err := h.Repo.GetItem(uint(id))
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(dtos.NotFoundResponse{Error: "Item not found"})
@@ -46,7 +54,7 @@ func GetItemHandler(w http.ResponseWriter, r *http.Request) {
 // @Success 201 {object} dtos.ItemResponse
 // @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
 // @Router /item [post]
-func CreateItemHandler(w http.ResponseWriter, r *http.Request) {
+func (h *ItemHandler) CreateItemHandler(w http.ResponseWriter, r *http.Request) {
 	var newItem dtos.ItemRequest
 	if err := json.NewDecoder(r.Body).Decode(&newItem); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -54,7 +62,7 @@ func CreateItemHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	createdItem, err := repository.CreateItem(newItem)
+	createdItem, err := h.Repo.CreateItem(newItem)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(dtos.InternalServerErrorResponse{Error: "Failed to create item"})
@@ -76,7 +84,7 @@ func CreateItemHandler(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} dtos.ItemResponse
 // @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
 // @Router /item/{id} [put]
-func UpdateItemHandler(w http.ResponseWriter, r *http.Request) {
+func (h *ItemHandler) UpdateItemHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 32)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -91,7 +99,7 @@ func UpdateItemHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	item, err := repository.UpdateItem(uint(id), updatedItem)
+	item, err := h.Repo.UpdateItem(uint(id), updatedItem)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(dtos.InternalServerErrorResponse{Error: "Failed to update item"})
@@ -111,7 +119,7 @@ func UpdateItemHandler(w http.ResponseWriter, r *http.Request) {
 // @Success 204 "No Content"
 // @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
 // @Router /item/{id} [delete]
-func DeleteItemHandler(w http.ResponseWriter, r *http.Request) {
+func (h *ItemHandler) DeleteItemHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.ParseUint(chi.URLParam(r, "id"), 10, 32)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -119,7 +127,7 @@ func DeleteItemHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := repository.DeleteItem(uint(id)); err != nil {
+	if err := h.Repo.DeleteItem(uint(id)); err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		json.NewEncoder(w).Encode(dtos.NotFoundResponse{Error: "Item not found"})
 		return
@@ -137,7 +145,7 @@ func DeleteItemHandler(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} dtos.ItemsResponse
 // @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
 // @Router /item/search [get]
-func SearchItemsHandler(w http.ResponseWriter, r *http.Request) {
+func (h *ItemHandler) SearchItemsHandler(w http.ResponseWriter, r *http.Request) {
 	keyword := r.URL.Query().Get("name")
 	if keyword == "" {
 		w.WriteHeader(http.StatusBadRequest)
@@ -145,7 +153,7 @@ func SearchItemsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	items, err := repository.SearchItems(keyword)
+	items, err := h.Repo.SearchItems(keyword)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(dtos.InternalServerErrorResponse{Error: "Database error"})

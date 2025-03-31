@@ -7,9 +7,23 @@ import (
 	"github.com/GroceryTrak/GroceryTrakService/internal/dtos"
 	"github.com/GroceryTrak/GroceryTrakService/internal/models"
 	"github.com/GroceryTrak/GroceryTrakService/internal/utils"
+	"gorm.io/gorm"
 )
 
-func RegisterUser(req dtos.RegisterRequest, role models.Role) (dtos.RegisterResponse, error) {
+type AuthRepository interface {
+	RegisterUser(req dtos.RegisterRequest, role string) (dtos.RegisterResponse, error)
+	LoginUser(req dtos.LoginRequest) (dtos.LoginResponse, error)
+}
+
+type AuthRepositoryImpl struct {
+	db *gorm.DB
+}
+
+func NewAuthRepository(db *gorm.DB) AuthRepository {
+	return &AuthRepositoryImpl{db: db}
+}
+
+func (r *AuthRepositoryImpl) RegisterUser(req dtos.RegisterRequest, role string) (dtos.RegisterResponse, error) {
 	var existingUser models.User
 	result := config.DB.Where("username = ?", req.Username).First(&existingUser).Error
 	if result == nil {
@@ -29,7 +43,7 @@ func RegisterUser(req dtos.RegisterRequest, role models.Role) (dtos.RegisterResp
 	return dtos.RegisterResponse{Message: "User registered successfully"}, nil
 }
 
-func LoginUser(req dtos.LoginRequest) (dtos.LoginResponse, error) {
+func (r *AuthRepositoryImpl) LoginUser(req dtos.LoginRequest) (dtos.LoginResponse, error) {
 	var user models.User
 	result := config.DB.Where("username = ?", req.Username).First(&user)
 	if result.Error != nil {

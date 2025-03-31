@@ -8,6 +8,14 @@ import (
 	"github.com/GroceryTrak/GroceryTrakService/internal/repository"
 )
 
+type AuthHandler struct {
+	Repo repository.AuthRepository
+}
+
+func NewAuthHandler(repo repository.AuthRepository) *AuthHandler {
+	return &AuthHandler{Repo: repo}
+}
+
 // @Summary Register a new user
 // @Description Creates a new user account
 // @Tags auth
@@ -17,7 +25,7 @@ import (
 // @Success 201 {object} dtos.RegisterResponse
 // @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
 // @Router /auth/register [post]
-func RegisterHandler(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	var req dtos.RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -25,7 +33,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := repository.RegisterUser(req, "user") // Default role to "user"
+	resp, err := h.Repo.RegisterUser(req, "user") // Default role to "user"
 	if err != nil {
 		w.WriteHeader(http.StatusConflict)
 		json.NewEncoder(w).Encode(dtos.ConflictResponse{Error: err.Error()})
@@ -45,7 +53,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} dtos.LoginResponse
 // @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
 // @Router /auth/login [post]
-func LoginHandler(w http.ResponseWriter, r *http.Request) {
+func (h *AuthHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	var req dtos.LoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -53,7 +61,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := repository.LoginUser(req)
+	resp, err := h.Repo.LoginUser(req)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
 		json.NewEncoder(w).Encode(dtos.UnauthorizedResponse{Error: "Invalid credentials"})
