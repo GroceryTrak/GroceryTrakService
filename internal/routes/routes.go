@@ -29,11 +29,11 @@ func SetupRoutes(r *chi.Mux) {
 	itemHandler, authHandler, recipeHandler, userItemHandler := SetupDependencies()
 
 	env := os.Getenv("ENV")
-	frontendDomain := os.Getenv("FRONTEND_DOMAIN")
+	flutterURL := os.Getenv("FLUTTER_URL")
 
 	allowedOrigins := []string{"*"}
-	if env == "production" && frontendDomain != "" {
-		allowedOrigins = []string{frontendDomain}
+	if env == "production" && flutterURL != "" {
+		allowedOrigins = []string{flutterURL}
 	}
 
 	r.Use(cors.Handler(cors.Options{
@@ -42,12 +42,18 @@ func SetupRoutes(r *chi.Mux) {
 		AllowedHeaders:   []string{"Accept", "Content-Type", "Authorization"},
 		AllowCredentials: true,
 	}))
+	r.Use(middlewares.SecurityHeadersMiddleware)
+	r.Use(middlewares.RequestSizeLimitMiddleware)
+	r.Use(middlewares.ProductionURLMiddleware)
+	r.Use(middlewares.RateLimitMiddleware)
 
-	r.Route("/swagger", func(r chi.Router) {
-		r.Get("/*", httpSwagger.Handler(
-			httpSwagger.URL("/swagger/doc.json"),
-		))
-	})
+	if env != "production" {
+		r.Route("/swagger", func(r chi.Router) {
+			r.Get("/*", httpSwagger.Handler(
+				httpSwagger.URL("/swagger/doc.json"),
+			))
+		})
+	}
 
 	r.Route("/auth", func(r chi.Router) {
 		r.Post("/register", authHandler.RegisterHandler)
