@@ -77,10 +77,30 @@ func InitPostgreSQL() {
 		}
 	}
 
-	// Run migrations (to create tables)
-	err = DB.AutoMigrate(&models.Recipe{}, &models.Item{}, &models.UserItem{}, &models.RecipeItem{}, &models.User{})
+	// Run migrations in order
+	err = DB.AutoMigrate(&models.User{})
 	if err != nil {
-		log.Fatalf("Migration failed: %v", err)
+		log.Fatalf("Failed to migrate User table: %v", err)
+	}
+
+	err = DB.AutoMigrate(&models.Item{})
+	if err != nil {
+		log.Fatalf("Failed to migrate Item table: %v", err)
+	}
+
+	err = DB.AutoMigrate(&models.UserItem{})
+	if err != nil {
+		log.Fatalf("Failed to migrate UserItem table: %v", err)
+	}
+
+	err = DB.AutoMigrate(&models.Recipe{})
+	if err != nil {
+		log.Fatalf("Failed to migrate Recipe table: %v", err)
+	}
+
+	err = DB.AutoMigrate(&models.RecipeItem{})
+	if err != nil {
+		log.Fatalf("Failed to migrate RecipeItem table: %v", err)
 	}
 
 	fmt.Println("Connected to PostgreSQL successfully")
