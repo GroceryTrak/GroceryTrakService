@@ -47,6 +47,11 @@ func InitRedis() {
 }
 
 func InitPostgreSQL() {
+	sslMode := "disable"
+	if os.Getenv("ENV") == "production" {
+		sslMode = "require"
+	}
+
 	dsn := fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
 		os.Getenv("DB_HOST"),
@@ -54,7 +59,7 @@ func InitPostgreSQL() {
 		os.Getenv("DB_PASSWORD"),
 		os.Getenv("DB_DATABASE"),
 		os.Getenv("DB_PORT"),
-		"disable",
+		sslMode,
 	)
 
 	var err error
