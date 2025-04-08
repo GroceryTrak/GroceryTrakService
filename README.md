@@ -53,20 +53,24 @@ air
 
 ## **Environment Variables**
 Before running, ensure your `.env` file contains the correct values:
-Change localhost to **name of the container** in `docker-compose.yaml` (db and redis) if running app with `docker-compose.yaml`
+Change `localhost` to **name of the container** in `docker-compose.yaml` (`db` and `redis`) if running app with `docker-compose.yaml`. If running app locally (with `go run main.go` or `air`, and not `docker compose up`), then keep `localhost`. Remember to change password in production.
+
 ```ini
 DB_HOST=localhost
 DB_USER=admin
+DB_PORT=5432
 DB_PASSWORD=adminpassword
 DB_DATABASE=grocerytrak
 
+
 REDIS_HOST=localhost
+REDIST_PORT=6379
 REDIS_PASS=adminpassword
 
 JWT_SECRET=8dd256ba6e1462d6e3439e51794cd5746455cbd1340af5eb15363181e7edc73a
 
 ENV=development
-FLUTTER_URL=
+FLUTTER_URL=http://localhost:53459
 HUGGINGFACE_URL=https://grocerytrak-devs-grocerytrakdetect.hf.space
 ```
 
