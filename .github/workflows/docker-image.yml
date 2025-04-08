@@ -1,4 +1,5 @@
-name: Build Docker Image ${{ github.event.release.tag_name }}
+name: Build Docker Image
+run-name: Build grocerytrak/service:${{ github.event.release.tag_name }}
 
 on:
   release:
