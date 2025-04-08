@@ -2,10 +2,12 @@ package config
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/GroceryTrak/GroceryTrakService/internal/models"
 	"github.com/joho/godotenv"
@@ -30,10 +32,14 @@ func LoadConfig() {
 
 func InitRedis() {
 	RedisClient = redis.NewClient(&redis.Options{
-		Addr:     os.Getenv("REDIS_HOST") + ":6379",
+		Addr:     os.Getenv("REDIS_HOST") + ":" + os.Getenv("REDIS_PORT"),
 		Password: os.Getenv("REDIS_PASS"),
 		DB:       0,
 	})
+
+	if os.Getenv("ENV") == "production" {
+		RedisClient.Options().TLSConfig = &tls.Config{}
+	}
 
 	_, err := RedisClient.Ping(Ctx).Result()
 	if err != nil {
@@ -49,14 +55,19 @@ func InitPostgreSQL() {
 		os.Getenv("DB_USER"),
 		os.Getenv("DB_PASSWORD"),
 		os.Getenv("DB_DATABASE"),
-		"5432",
+		os.Getenv("DB_PORT"),
 		"disable",
 	)
 
 	var err error
-	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		log.Fatalf("Could not connect to PostgreSQL: %v", err)
+	for range 10 {
+		DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		if err == nil {
+			log.Println("Connected to PostgreSQL successfully")
+			break
+		}
+		log.Printf("Could not connect to PostgreSQL: %v. Retrying in 3 seconds...", err)
+		time.Sleep(time.Second * 3)
 	}
 
 	// Drop all tables (development only)
@@ -78,29 +89,9 @@ func InitPostgreSQL() {
 	}
 
 	// Run migrations in order
-	err = DB.AutoMigrate(&models.User{})
+	err = DB.AutoMigrate(&models.User{}, &models.Item{}, &models.UserItem{}, &models.Recipe{}, &models.RecipeItem{})
 	if err != nil {
-		log.Fatalf("Failed to migrate User table: %v", err)
-	}
-
-	err = DB.AutoMigrate(&models.Item{})
-	if err != nil {
-		log.Fatalf("Failed to migrate Item table: %v", err)
-	}
-
-	err = DB.AutoMigrate(&models.UserItem{})
-	if err != nil {
-		log.Fatalf("Failed to migrate UserItem table: %v", err)
-	}
-
-	err = DB.AutoMigrate(&models.Recipe{})
-	if err != nil {
-		log.Fatalf("Failed to migrate Recipe table: %v", err)
-	}
-
-	err = DB.AutoMigrate(&models.RecipeItem{})
-	if err != nil {
-		log.Fatalf("Failed to migrate RecipeItem table: %v", err)
+		log.Fatalf("Failed to migrate table: %v", err)
 	}
 
 	fmt.Println("Connected to PostgreSQL successfully")
