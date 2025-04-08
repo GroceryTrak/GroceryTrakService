@@ -31,7 +31,7 @@ func LoadConfig() {
 }
 
 func InitRedis() {
-	fmt.Printf("ENV: '%s'\n", os.Getenv("ENV"))
+	log.Printf("ENV: '%s'\n", os.Getenv("ENV"))
 	options := &redis.Options{
 		Addr:     os.Getenv("REDIS_HOST") + ":" + os.Getenv("REDIS_PORT"),
 		Password: os.Getenv("REDIS_PASS"),
