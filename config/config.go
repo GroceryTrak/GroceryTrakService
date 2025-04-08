@@ -2,7 +2,6 @@ package config
 
 import (
 	"context"
-	"crypto/tls"
 	"fmt"
 	"log"
 	"os"
@@ -36,10 +35,6 @@ func InitRedis() {
 		Addr:     os.Getenv("REDIS_HOST") + ":" + os.Getenv("REDIS_PORT"),
 		Password: os.Getenv("REDIS_PASS"),
 		DB:       0,
-	}
-
-	if os.Getenv("ENV") == "production" {
-		options.TLSConfig = &tls.Config{}
 	}
 
 	RedisClient = redis.NewClient(options)
