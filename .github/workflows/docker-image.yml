@@ -1,4 +1,4 @@
-name: Build and Push Docker Image to Hub
+name: Build Docker Image ${{ github.event.release.tag_name }}
 
 on:
   release:
