@@ -31,15 +31,17 @@ func LoadConfig() {
 }
 
 func InitRedis() {
-	RedisClient = redis.NewClient(&redis.Options{
+	options := &redis.Options{
 		Addr:     os.Getenv("REDIS_HOST") + ":" + os.Getenv("REDIS_PORT"),
 		Password: os.Getenv("REDIS_PASS"),
 		DB:       0,
-	})
+	}
 
 	if os.Getenv("ENV") == "production" {
-		RedisClient.Options().TLSConfig = &tls.Config{}
+		options.TLSConfig = &tls.Config{}
 	}
+
+	RedisClient = redis.NewClient(options)
 
 	_, err := RedisClient.Ping(Ctx).Result()
 	if err != nil {
