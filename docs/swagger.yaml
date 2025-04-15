@@ -674,6 +674,34 @@ paths:
       summary: Update a user_item for the authenticated user
       tags:
       - user_item
+  /user_item/detect:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Detect items from an uploaded image for the authenticated user
+        using OpenAI's vision model
+      parameters:
+      - description: Image file
+        in: formData
+        name: image
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dtos.UserItemsResponse'
+            type: array
+        default:
+          description: Standard Error Responses
+          schema:
+            $ref: '#/definitions/dtos.ErrorResponse'
+      summary: Detect items from an uploaded image
+      tags:
+      - user_item
   /user_item/predict:
     post:
       consumes:

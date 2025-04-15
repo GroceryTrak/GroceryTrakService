@@ -37,7 +37,7 @@ func (h *UserItemHandler) GetAllUserItemsHandler(w http.ResponseWriter, r *http.
 	userItems, err := h.Repo.GetAllUserItems(userID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(dtos.ErrorResponse{Error: "Failed to fetch user items"})
+		json.NewEncoder(w).Encode(dtos.InternalServerErrorResponse{Error: "Failed to get all user items"})
 		return
 	}
 
@@ -58,15 +58,15 @@ func (h *UserItemHandler) GetUserItemHandler(w http.ResponseWriter, r *http.Requ
 
 	itemID, err := strconv.ParseUint(chi.URLParam(r, "item_id"), 10, 32)
 	if err != nil {
-		http.Error(w, "Invalid item ID", http.StatusBadRequest)
-		json.NewEncoder(w).Encode(dtos.ErrorResponse{Error: "Invalid user item ID"})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(dtos.BadRequestResponse{Error: "Invalid user item ID"})
 		return
 	}
 
 	userItem, err := h.Repo.GetUserItem(uint(itemID), userID)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(dtos.NotFoundResponse{Error: "User item not found"})
+		json.NewEncoder(w).Encode(dtos.NotFoundResponse{Error: "Failed to get user item"})
 		return
 	}
 
@@ -88,8 +88,8 @@ func (h *UserItemHandler) CreateUserItemHandler(w http.ResponseWriter, r *http.R
 
 	var req dtos.UserItemRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
-		json.NewEncoder(w).Encode(dtos.ErrorResponse{Error: "Invalid request payload"})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(dtos.BadRequestResponse{Error: "Invalid request payload"})
 		return
 	}
 
@@ -120,15 +120,15 @@ func (h *UserItemHandler) UpdateUserItemHandler(w http.ResponseWriter, r *http.R
 
 	itemID, err := strconv.ParseUint(chi.URLParam(r, "item_id"), 10, 32)
 	if err != nil {
-		http.Error(w, "Invalid item ID", http.StatusBadRequest)
-		json.NewEncoder(w).Encode(dtos.ErrorResponse{Error: "Invalid item ID"})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(dtos.BadRequestResponse{Error: "Invalid item ID"})
 		return
 	}
 
 	var req dtos.UserItemRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(dtos.BadRequestResponse{Error: "Invalid request data"})
+		json.NewEncoder(w).Encode(dtos.BadRequestResponse{Error: "Invalid request payload"})
 		return
 	}
 
@@ -155,15 +155,15 @@ func (h *UserItemHandler) DeleteUserItemHandler(w http.ResponseWriter, r *http.R
 
 	itemID, err := strconv.ParseUint(chi.URLParam(r, "item_id"), 10, 32)
 	if err != nil {
-		http.Error(w, "Invalid item ID", http.StatusBadRequest)
-		json.NewEncoder(w).Encode(dtos.ErrorResponse{Error: "Invalid item ID"})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(dtos.BadRequestResponse{Error: "Invalid item ID"})
 		return
 	}
 
 	err = h.Repo.DeleteUserItem(uint(itemID), userID)
 	if err != nil {
-		http.Error(w, "Failed to delete user_item", http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(dtos.ErrorResponse{Error: "Failed to delete user_item"})
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(dtos.InternalServerErrorResponse{Error: "Failed to delete user item"})
 		return
 	}
 
@@ -187,7 +187,59 @@ func (h *UserItemHandler) SearchUserItemsHandler(w http.ResponseWriter, r *http.
 	userItems, err := h.Repo.SearchUserItems(query, userID)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(dtos.InternalServerErrorResponse{Error: "Database error"})
+		json.NewEncoder(w).Encode(dtos.InternalServerErrorResponse{Error: "Failed to search user items"})
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(userItems)
+}
+
+// @Summary Detect items from an uploaded image
+// @Description Detect items from an uploaded image for the authenticated user using OpenAI's vision model
+// @Tags user_item
+// @Accept multipart/form-data
+// @Produce json
+// @Param image formData file true "Image file"
+// @Success 200 {array} dtos.UserItemsResponse
+// @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
+// @Router /user_item/detect [post]
+func (h *UserItemHandler) DetectUserItemsHandler(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value(middlewares.IDKey).(uint)
+
+	apiKey := os.Getenv("OPENAI_API_KEY")
+	if apiKey == "" {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(dtos.InternalServerErrorResponse{Error: "OPENAI_API_KEY is not set"})
+		return
+	}
+
+	err := r.ParseMultipartForm(10 << 20) // 10 MB max file size
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(dtos.BadRequestResponse{Error: "Failed to parse form"})
+		return
+	}
+
+	file, _, err := r.FormFile("image")
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(dtos.BadRequestResponse{Error: "Image file is required"})
+		return
+	}
+	defer file.Close()
+
+	fileBytes, err := io.ReadAll(file)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(dtos.InternalServerErrorResponse{Error: "Failed to read image"})
+		return
+	}
+
+	userItems, err := h.Repo.DetectUserItems(fileBytes, userID, apiKey)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(dtos.InternalServerErrorResponse{Error: "Failed to detect items"})
 		return
 	}
 
@@ -209,30 +261,30 @@ func (h *UserItemHandler) PredictUserItemsHandler(w http.ResponseWriter, r *http
 
 	err := r.ParseMultipartForm(10 << 20)
 	if err != nil {
-		http.Error(w, "Failed to parse form", http.StatusBadRequest)
-		json.NewEncoder(w).Encode(dtos.ErrorResponse{Error: "Failed to parse form"})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(dtos.BadRequestResponse{Error: "Failed to parse form"})
 		return
 	}
 
 	file, _, err := r.FormFile("image")
 	if err != nil {
-		http.Error(w, "Image file is required", http.StatusBadRequest)
-		json.NewEncoder(w).Encode(dtos.ErrorResponse{Error: "Image file is required"})
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(dtos.BadRequestResponse{Error: "Image file is required"})
 		return
 	}
 	defer file.Close()
 
 	fileBytes, err := io.ReadAll(file)
 	if err != nil {
-		http.Error(w, "Failed to read image", http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(dtos.ErrorResponse{Error: "Failed to read image"})
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(dtos.InternalServerErrorResponse{Error: "Failed to read image"})
 		return
 	}
 
 	detectDomain := os.Getenv("HUGGINGFACE_URL")
 	if detectDomain == "" {
-		http.Error(w, "HUGGINGFACE_URL is not set", http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(dtos.ErrorResponse{Error: "HUGGINGFACE_URL is not set"})
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(dtos.InternalServerErrorResponse{Error: "HUGGINGFACE_URL is not set"})
 		return
 	}
 
@@ -241,14 +293,14 @@ func (h *UserItemHandler) PredictUserItemsHandler(w http.ResponseWriter, r *http
 
 	filePart, err := writer.CreateFormFile("image", "upload.png")
 	if err != nil {
-		http.Error(w, "Failed to create form file", http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(dtos.ErrorResponse{Error: "Failed to create form file"})
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(dtos.InternalServerErrorResponse{Error: "Failed to create form file"})
 		return
 	}
 
 	if _, err := filePart.Write(fileBytes); err != nil {
-		http.Error(w, "Failed to write file data", http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(dtos.ErrorResponse{Error: "Failed to write file data"})
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(dtos.InternalServerErrorResponse{Error: "Failed to write file data"})
 		return
 	}
 
@@ -257,8 +309,8 @@ func (h *UserItemHandler) PredictUserItemsHandler(w http.ResponseWriter, r *http
 	predictURL := fmt.Sprintf("%s/predict", detectDomain)
 	req, err := http.NewRequest("POST", predictURL, &buf)
 	if err != nil {
-		http.Error(w, "Failed to create request", http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(dtos.ErrorResponse{Error: "Failed to create request"})
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(dtos.InternalServerErrorResponse{Error: "Failed to create request"})
 		return
 	}
 
@@ -267,8 +319,8 @@ func (h *UserItemHandler) PredictUserItemsHandler(w http.ResponseWriter, r *http
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		http.Error(w, "Failed to get prediction", http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(dtos.ErrorResponse{Error: "Failed to get prediction"})
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(dtos.InternalServerErrorResponse{Error: "Failed to get prediction"})
 		return
 	}
 	defer resp.Body.Close()
@@ -278,15 +330,15 @@ func (h *UserItemHandler) PredictUserItemsHandler(w http.ResponseWriter, r *http
 		AnnotatedImage string   `json:"annotated_image"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
-		http.Error(w, "Failed to parse prediction response", http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(dtos.ErrorResponse{Error: "Failed to parse prediction response"})
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(dtos.InternalServerErrorResponse{Error: "Failed to parse prediction response"})
 		return
 	}
 
 	result, err := h.Repo.PredictUserItems(response.Items, userID)
 	if err != nil {
-		http.Error(w, "Failed to process prediction results", http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(dtos.ErrorResponse{Error: "Failed to process prediction results"})
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(dtos.InternalServerErrorResponse{Error: "Failed to process prediction results"})
 		return
 	}
 

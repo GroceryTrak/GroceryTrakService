@@ -85,5 +85,6 @@ func SetupRoutes(r *chi.Mux) {
 		r.Put("/{item_id}", userItemHandler.UpdateUserItemHandler)
 		r.Delete("/{item_id}", userItemHandler.DeleteUserItemHandler)
 		r.Post("/predict", userItemHandler.PredictUserItemsHandler)
+		r.Post("/detect", userItemHandler.DetectUserItemsHandler)
 	})
 }

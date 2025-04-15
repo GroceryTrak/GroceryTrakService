@@ -566,6 +566,47 @@ const docTemplate = `{
                 }
             }
         },
+        "/user_item/detect": {
+            "post": {
+                "description": "Detect items from an uploaded image for the authenticated user using OpenAI's vision model",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user_item"
+                ],
+                "summary": "Detect items from an uploaded image",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "Image file",
+                        "name": "image",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dtos.UserItemsResponse"
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Standard Error Responses",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/user_item/predict": {
             "post": {
                 "description": "Predict items from an uploaded image for the authenticated user",
