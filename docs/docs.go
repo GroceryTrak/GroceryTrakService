@@ -809,6 +809,20 @@ const docTemplate = `{
                 }
             }
         },
+        "dtos.DietCount": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "vegan": {
+                    "type": "boolean"
+                },
+                "vegetarian": {
+                    "type": "boolean"
+                }
+            }
+        },
         "dtos.ErrorResponse": {
             "type": "object",
             "properties": {
@@ -836,6 +850,48 @@ const docTemplate = `{
                 }
             }
         },
+        "dtos.ItemNutrientRequest": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "example": 200
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Calories"
+                },
+                "percentOfDailyNeeds": {
+                    "type": "number",
+                    "example": 100
+                },
+                "unit": {
+                    "type": "string",
+                    "example": "kcal"
+                }
+            }
+        },
+        "dtos.ItemNutrientResponse": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "example": 200
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Calories"
+                },
+                "percentOfDailyNeeds": {
+                    "type": "number",
+                    "example": 100
+                },
+                "unit": {
+                    "type": "string",
+                    "example": "kcal"
+                }
+            }
+        },
         "dtos.ItemRequest": {
             "type": "object",
             "properties": {
@@ -850,6 +906,12 @@ const docTemplate = `{
                 "name": {
                     "type": "string",
                     "example": "Milk"
+                },
+                "nutrients": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dtos.ItemNutrientRequest"
+                    }
                 },
                 "spoonacular_id": {
                     "type": "integer",
@@ -871,6 +933,12 @@ const docTemplate = `{
                 "name": {
                     "type": "string",
                     "example": "Milk"
+                },
+                "nutrients": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dtos.ItemNutrientResponse"
+                    }
                 },
                 "spoonacular_id": {
                     "type": "integer",
@@ -920,6 +988,32 @@ const docTemplate = `{
                 }
             }
         },
+        "dtos.RecipeInstructionRequest": {
+            "type": "object",
+            "properties": {
+                "number": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "step": {
+                    "type": "string",
+                    "example": "Bring a large pot of salted water to boil"
+                }
+            }
+        },
+        "dtos.RecipeInstructionResponse": {
+            "type": "object",
+            "properties": {
+                "number": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "step": {
+                    "type": "string",
+                    "example": "Bring a large pot of salted water to boil"
+                }
+            }
+        },
         "dtos.RecipeItemRequest": {
             "type": "object",
             "properties": {
@@ -953,6 +1047,48 @@ const docTemplate = `{
                 }
             }
         },
+        "dtos.RecipeNutrientRequest": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "example": 200
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Calories"
+                },
+                "percentOfDailyNeeds": {
+                    "type": "number",
+                    "example": 100
+                },
+                "unit": {
+                    "type": "string",
+                    "example": "kcal"
+                }
+            }
+        },
+        "dtos.RecipeNutrientResponse": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "example": 200
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Calories"
+                },
+                "percentOfDailyNeeds": {
+                    "type": "number",
+                    "example": 100
+                },
+                "unit": {
+                    "type": "string",
+                    "example": "kcal"
+                }
+            }
+        },
         "dtos.RecipeRequest": {
             "type": "object",
             "properties": {
@@ -970,9 +1106,21 @@ const docTemplate = `{
                         "$ref": "#/definitions/dtos.RecipeItemRequest"
                     }
                 },
+                "instructions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dtos.RecipeInstructionRequest"
+                    }
+                },
                 "kcal": {
                     "type": "number",
                     "example": 450.5
+                },
+                "nutrients": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dtos.RecipeNutrientRequest"
+                    }
                 },
                 "prep_time": {
                     "type": "integer",
@@ -981,6 +1129,18 @@ const docTemplate = `{
                 "ready_time": {
                     "type": "integer",
                     "example": 30
+                },
+                "servings": {
+                    "type": "number",
+                    "example": 4
+                },
+                "spoonacular_id": {
+                    "type": "integer",
+                    "example": 12345
+                },
+                "summary": {
+                    "type": "string",
+                    "example": "A classic Italian pasta dish with eggs, cheese, pancetta, and black pepper."
                 },
                 "title": {
                     "type": "string",
@@ -1017,9 +1177,21 @@ const docTemplate = `{
                         "$ref": "#/definitions/dtos.RecipeItemResponse"
                     }
                 },
+                "instructions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dtos.RecipeInstructionResponse"
+                    }
+                },
                 "kcal": {
                     "type": "number",
                     "example": 450.5
+                },
+                "nutrients": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dtos.RecipeNutrientResponse"
+                    }
                 },
                 "prep_time": {
                     "type": "integer",
@@ -1028,6 +1200,18 @@ const docTemplate = `{
                 "ready_time": {
                     "type": "integer",
                     "example": 30
+                },
+                "servings": {
+                    "type": "number",
+                    "example": 4
+                },
+                "spoonacular_id": {
+                    "type": "integer",
+                    "example": 12345
+                },
+                "summary": {
+                    "type": "string",
+                    "example": "A classic Italian pasta dish with eggs, cheese, pancetta, and black pepper."
                 },
                 "title": {
                     "type": "string",
@@ -1046,6 +1230,15 @@ const docTemplate = `{
         "dtos.RecipesResponse": {
             "type": "object",
             "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "diet_counts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dtos.DietCount"
+                    }
+                },
                 "recipes": {
                     "type": "array",
                     "items": {

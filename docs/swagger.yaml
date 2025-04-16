@@ -11,6 +11,15 @@ definitions:
         example: User already exists
         type: string
     type: object
+  dtos.DietCount:
+    properties:
+      count:
+        type: integer
+      vegan:
+        type: boolean
+      vegetarian:
+        type: boolean
+    type: object
   dtos.ErrorResponse:
     properties:
       error:
@@ -29,6 +38,36 @@ definitions:
         example: Internal server error
         type: string
     type: object
+  dtos.ItemNutrientRequest:
+    properties:
+      amount:
+        example: 200
+        type: number
+      name:
+        example: Calories
+        type: string
+      percentOfDailyNeeds:
+        example: 100
+        type: number
+      unit:
+        example: kcal
+        type: string
+    type: object
+  dtos.ItemNutrientResponse:
+    properties:
+      amount:
+        example: 200
+        type: number
+      name:
+        example: Calories
+        type: string
+      percentOfDailyNeeds:
+        example: 100
+        type: number
+      unit:
+        example: kcal
+        type: string
+    type: object
   dtos.ItemRequest:
     properties:
       id:
@@ -40,6 +79,10 @@ definitions:
       name:
         example: Milk
         type: string
+      nutrients:
+        items:
+          $ref: '#/definitions/dtos.ItemNutrientRequest'
+        type: array
       spoonacular_id:
         example: 1
         type: integer
@@ -55,6 +98,10 @@ definitions:
       name:
         example: Milk
         type: string
+      nutrients:
+        items:
+          $ref: '#/definitions/dtos.ItemNutrientResponse'
+        type: array
       spoonacular_id:
         example: 1
         type: integer
@@ -87,6 +134,24 @@ definitions:
         example: Resource not found
         type: string
     type: object
+  dtos.RecipeInstructionRequest:
+    properties:
+      number:
+        example: 1
+        type: integer
+      step:
+        example: Bring a large pot of salted water to boil
+        type: string
+    type: object
+  dtos.RecipeInstructionResponse:
+    properties:
+      number:
+        example: 1
+        type: integer
+      step:
+        example: Bring a large pot of salted water to boil
+        type: string
+    type: object
   dtos.RecipeItemRequest:
     properties:
       amount:
@@ -110,6 +175,36 @@ definitions:
         example: cups
         type: string
     type: object
+  dtos.RecipeNutrientRequest:
+    properties:
+      amount:
+        example: 200
+        type: number
+      name:
+        example: Calories
+        type: string
+      percentOfDailyNeeds:
+        example: 100
+        type: number
+      unit:
+        example: kcal
+        type: string
+    type: object
+  dtos.RecipeNutrientResponse:
+    properties:
+      amount:
+        example: 200
+        type: number
+      name:
+        example: Calories
+        type: string
+      percentOfDailyNeeds:
+        example: 100
+        type: number
+      unit:
+        example: kcal
+        type: string
+    type: object
   dtos.RecipeRequest:
     properties:
       cooking_time:
@@ -122,15 +217,33 @@ definitions:
         items:
           $ref: '#/definitions/dtos.RecipeItemRequest'
         type: array
+      instructions:
+        items:
+          $ref: '#/definitions/dtos.RecipeInstructionRequest'
+        type: array
       kcal:
         example: 450.5
         type: number
+      nutrients:
+        items:
+          $ref: '#/definitions/dtos.RecipeNutrientRequest'
+        type: array
       prep_time:
         example: 10
         type: integer
       ready_time:
         example: 30
         type: integer
+      servings:
+        example: 4
+        type: number
+      spoonacular_id:
+        example: 12345
+        type: integer
+      summary:
+        example: A classic Italian pasta dish with eggs, cheese, pancetta, and black
+          pepper.
+        type: string
       title:
         example: Spaghetti Carbonara
         type: string
@@ -156,15 +269,33 @@ definitions:
         items:
           $ref: '#/definitions/dtos.RecipeItemResponse'
         type: array
+      instructions:
+        items:
+          $ref: '#/definitions/dtos.RecipeInstructionResponse'
+        type: array
       kcal:
         example: 450.5
         type: number
+      nutrients:
+        items:
+          $ref: '#/definitions/dtos.RecipeNutrientResponse'
+        type: array
       prep_time:
         example: 10
         type: integer
       ready_time:
         example: 30
         type: integer
+      servings:
+        example: 4
+        type: number
+      spoonacular_id:
+        example: 12345
+        type: integer
+      summary:
+        example: A classic Italian pasta dish with eggs, cheese, pancetta, and black
+          pepper.
+        type: string
       title:
         example: Spaghetti Carbonara
         type: string
@@ -177,6 +308,12 @@ definitions:
     type: object
   dtos.RecipesResponse:
     properties:
+      count:
+        type: integer
+      diet_counts:
+        items:
+          $ref: '#/definitions/dtos.DietCount'
+        type: array
       recipes:
         items:
           $ref: '#/definitions/dtos.RecipeResponse'
