@@ -300,6 +300,7 @@ Do not include any other text, explanations, or formatting. Return only the JSON
 					Name:          detectedItem.Name,
 					Image:         "",
 					SpoonacularID: 0,
+					Nutrients:     []models.Nutrient{},
 				}
 				if err := r.db.Create(&item).Error; err != nil {
 					return dtos.UserItemsResponse{}, err

@@ -24,8 +24,18 @@ func NewItemRepository(db *gorm.DB) ItemRepository {
 
 func (r *ItemRepositoryImpl) GetItem(id uint) (dtos.ItemResponse, error) {
 	var item models.Item
-	if err := r.db.First(&item, "id = ?", id).Error; err != nil {
+	if err := r.db.Preload("Nutrients").First(&item, "id = ?", id).Error; err != nil {
 		return dtos.ItemResponse{}, err
+	}
+
+	nutrients := make([]dtos.NutrientResponse, len(item.Nutrients))
+	for i, n := range item.Nutrients {
+		nutrients[i] = dtos.NutrientResponse{
+			Name:                n.Name,
+			Amount:              n.Amount,
+			Unit:                n.Unit,
+			PercentOfDailyNeeds: n.PercentOfDailyNeeds,
+		}
 	}
 
 	return dtos.ItemResponse{
@@ -33,18 +43,49 @@ func (r *ItemRepositoryImpl) GetItem(id uint) (dtos.ItemResponse, error) {
 		Name:          item.Name,
 		Image:         item.Image,
 		SpoonacularID: item.SpoonacularID,
+		Nutrients:     nutrients,
 	}, nil
 }
 
 func (r *ItemRepositoryImpl) CreateItem(req dtos.ItemRequest) (dtos.ItemResponse, error) {
+	tx := r.db.Begin()
+	if tx.Error != nil {
+		return dtos.ItemResponse{}, tx.Error
+	}
+
 	item := models.Item{
 		Name:          req.Name,
 		Image:         req.Image,
 		SpoonacularID: req.SpoonacularID,
+		Nutrients:     make([]models.Nutrient, len(req.Nutrients)),
 	}
 
-	if err := r.db.Create(&item).Error; err != nil {
+	for i, n := range req.Nutrients {
+		item.Nutrients[i] = models.Nutrient{
+			Name:                n.Name,
+			Amount:              n.Amount,
+			Unit:                n.Unit,
+			PercentOfDailyNeeds: n.PercentOfDailyNeeds,
+		}
+	}
+
+	if err := tx.Create(&item).Error; err != nil {
+		tx.Rollback()
 		return dtos.ItemResponse{}, err
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return dtos.ItemResponse{}, err
+	}
+
+	nutrientResponses := make([]dtos.NutrientResponse, len(item.Nutrients))
+	for i, n := range item.Nutrients {
+		nutrientResponses[i] = dtos.NutrientResponse{
+			Name:                n.Name,
+			Amount:              n.Amount,
+			Unit:                n.Unit,
+			PercentOfDailyNeeds: n.PercentOfDailyNeeds,
+		}
 	}
 
 	return dtos.ItemResponse{
@@ -52,6 +93,7 @@ func (r *ItemRepositoryImpl) CreateItem(req dtos.ItemRequest) (dtos.ItemResponse
 		Name:          item.Name,
 		Image:         item.Image,
 		SpoonacularID: item.SpoonacularID,
+		Nutrients:     nutrientResponses,
 	}, nil
 }
 
@@ -61,12 +103,56 @@ func (r *ItemRepositoryImpl) UpdateItem(id uint, req dtos.ItemRequest) (dtos.Ite
 		return dtos.ItemResponse{}, err
 	}
 
+	if err := r.db.Where("item_id = ?", id).Delete(&models.Nutrient{}).Error; err != nil {
+		return dtos.ItemResponse{}, err
+	}
+
+	modelNutrients := make([]models.Nutrient, len(req.Nutrients))
+	for i, n := range req.Nutrients {
+		modelNutrients[i] = models.Nutrient{
+			ItemID:              id,
+			Name:                n.Name,
+			Amount:              n.Amount,
+			Unit:                n.Unit,
+			PercentOfDailyNeeds: n.PercentOfDailyNeeds,
+		}
+	}
+
 	item.Name = req.Name
 	item.Image = req.Image
 	item.SpoonacularID = req.SpoonacularID
 
-	if err := r.db.Save(&item).Error; err != nil {
+	tx := r.db.Begin()
+	if tx.Error != nil {
+		return dtos.ItemResponse{}, tx.Error
+	}
+
+	if err := tx.Save(&item).Error; err != nil {
+		tx.Rollback()
 		return dtos.ItemResponse{}, err
+	}
+
+	if err := tx.Create(&modelNutrients).Error; err != nil {
+		tx.Rollback()
+		return dtos.ItemResponse{}, err
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return dtos.ItemResponse{}, err
+	}
+
+	if err := r.db.Preload("Nutrients").First(&item, id).Error; err != nil {
+		return dtos.ItemResponse{}, err
+	}
+
+	nutrients := make([]dtos.NutrientResponse, len(item.Nutrients))
+	for i, n := range item.Nutrients {
+		nutrients[i] = dtos.NutrientResponse{
+			Name:                n.Name,
+			Amount:              n.Amount,
+			Unit:                n.Unit,
+			PercentOfDailyNeeds: n.PercentOfDailyNeeds,
+		}
 	}
 
 	return dtos.ItemResponse{
@@ -74,10 +160,14 @@ func (r *ItemRepositoryImpl) UpdateItem(id uint, req dtos.ItemRequest) (dtos.Ite
 		Name:          item.Name,
 		Image:         item.Image,
 		SpoonacularID: item.SpoonacularID,
+		Nutrients:     nutrients,
 	}, nil
 }
 
 func (r *ItemRepositoryImpl) DeleteItem(id uint) error {
+	if err := r.db.Where("item_id = ?", id).Delete(&models.Nutrient{}).Error; err != nil {
+		return err
+	}
 	return r.db.Delete(&models.Item{}, "id = ?", id).Error
 }
 
@@ -85,18 +175,29 @@ func (r *ItemRepositoryImpl) SearchItems(keyword string) (dtos.ItemsResponse, er
 	var items []models.Item
 	searchTerm := "%" + keyword + "%"
 
-	result := r.db.Where("name LIKE ?", searchTerm).Find(&items)
+	result := r.db.Preload("Nutrients").Where("name LIKE ?", searchTerm).Find(&items)
 	if result.Error != nil {
 		return dtos.ItemsResponse{}, result.Error
 	}
 
 	var itemResponses []dtos.ItemResponse
 	for _, item := range items {
+		nutrients := make([]dtos.NutrientResponse, len(item.Nutrients))
+		for i, n := range item.Nutrients {
+			nutrients[i] = dtos.NutrientResponse{
+				Name:                n.Name,
+				Amount:              n.Amount,
+				Unit:                n.Unit,
+				PercentOfDailyNeeds: n.PercentOfDailyNeeds,
+			}
+		}
+
 		itemResponses = append(itemResponses, dtos.ItemResponse{
 			ID:            item.ID,
 			Name:          item.Name,
 			Image:         item.Image,
 			SpoonacularID: item.SpoonacularID,
+			Nutrients:     nutrients,
 		})
 	}
 

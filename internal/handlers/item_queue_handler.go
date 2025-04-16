@@ -8,6 +8,7 @@ import (
 
 	"github.com/GroceryTrak/GroceryTrakService/internal/clients"
 	"github.com/GroceryTrak/GroceryTrakService/internal/dtos"
+	"github.com/GroceryTrak/GroceryTrakService/internal/models"
 	"github.com/GroceryTrak/GroceryTrakService/internal/repository"
 )
 
@@ -76,10 +77,30 @@ func (h *ItemQueueHandler) processBatch(ctx context.Context) error {
 			continue
 		}
 
+		nutrients := make([]models.Nutrient, len(spoonacularItem.Nutrition.Nutrients))
+		for i, n := range spoonacularItem.Nutrition.Nutrients {
+			nutrients[i] = models.Nutrient{
+				Name:                n.Name,
+				Amount:              n.Amount,
+				Unit:                n.Unit,
+				PercentOfDailyNeeds: n.PercentOfDailyNeeds,
+			}
+		}
+
 		updateReq := dtos.ItemRequest{
 			Name:          item.Name,
 			Image:         spoonacularItem.Image,
 			SpoonacularID: uint(spoonacularItem.ID),
+			Nutrients:     make([]dtos.NutrientRequest, len(nutrients)),
+		}
+
+		for i, n := range nutrients {
+			updateReq.Nutrients[i] = dtos.NutrientRequest{
+				Name:                n.Name,
+				Amount:              n.Amount,
+				Unit:                n.Unit,
+				PercentOfDailyNeeds: n.PercentOfDailyNeeds,
+			}
 		}
 
 		_, err = h.itemRepo.UpdateItem(item.ItemID, updateReq)
