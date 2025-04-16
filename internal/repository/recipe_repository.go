@@ -4,7 +4,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/GroceryTrak/GroceryTrakService/config"
 	"github.com/GroceryTrak/GroceryTrakService/internal/dtos"
 	"github.com/GroceryTrak/GroceryTrakService/internal/models"
 	"gorm.io/gorm"
@@ -28,7 +27,7 @@ func NewRecipeRepository(db *gorm.DB) RecipeRepository {
 
 func (r *RecipeRepositoryImpl) GetRecipe(id uint) (*dtos.RecipeResponse, error) {
 	var recipe models.Recipe
-	if err := config.DB.Preload("Ingredients.Item").First(&recipe, id).Error; err != nil {
+	if err := r.db.Preload("Ingredients.Item").First(&recipe, id).Error; err != nil {
 		return nil, err
 	}
 	ingredients := make([]dtos.RecipeItemResponse, len(recipe.Ingredients))
@@ -80,11 +79,11 @@ func (r *RecipeRepositoryImpl) CreateRecipe(req dtos.RecipeRequest) (*dtos.Recip
 		}
 	}
 
-	if err := config.DB.Create(&recipe).Error; err != nil {
+	if err := r.db.Create(&recipe).Error; err != nil {
 		return nil, err
 	}
 
-	if err := config.DB.Preload("Ingredients.Item").First(&recipe, recipe.ID).Error; err != nil {
+	if err := r.db.Preload("Ingredients.Item").First(&recipe, recipe.ID).Error; err != nil {
 		return nil, err
 	}
 
@@ -118,7 +117,7 @@ func (r *RecipeRepositoryImpl) CreateRecipe(req dtos.RecipeRequest) (*dtos.Recip
 
 func (r *RecipeRepositoryImpl) UpdateRecipe(id uint, req dtos.RecipeRequest) (*dtos.RecipeResponse, error) {
 	var recipe models.Recipe
-	if err := config.DB.Preload("Ingredients.Item").First(&recipe, id).Error; err != nil {
+	if err := r.db.Preload("Ingredients.Item").First(&recipe, id).Error; err != nil {
 		return nil, err
 	}
 
@@ -131,7 +130,7 @@ func (r *RecipeRepositoryImpl) UpdateRecipe(id uint, req dtos.RecipeRequest) (*d
 	recipe.Vegan = req.Vegan
 	recipe.Vegetarian = req.Vegetarian
 
-	if err := config.DB.Save(&recipe).Error; err != nil {
+	if err := r.db.Save(&recipe).Error; err != nil {
 		return nil, err
 	}
 
@@ -164,7 +163,7 @@ func (r *RecipeRepositoryImpl) UpdateRecipe(id uint, req dtos.RecipeRequest) (*d
 }
 
 func (r *RecipeRepositoryImpl) DeleteRecipe(id uint) error {
-	if err := config.DB.Delete(&models.Recipe{}, id).Error; err != nil {
+	if err := r.db.Delete(&models.Recipe{}, id).Error; err != nil {
 		return err
 	}
 	return nil
@@ -174,13 +173,13 @@ func (r *RecipeRepositoryImpl) SearchRecipes(query dtos.RecipeQuery) (dtos.Recip
 	var recipes []models.Recipe
 
 	if query.Title != "" {
-		config.DB = config.DB.Where("LOWER(title) LIKE ?", "%"+strings.ToLower(query.Title)+"%")
+		r.db = r.db.Where("LOWER(title) LIKE ?", "%"+strings.ToLower(query.Title)+"%")
 	}
 
 	// Handle diet filtering
 	validDiets := map[string]string{"vegan": "vegan", "vegetarian": "vegetarian"}
 	if dietField, exists := validDiets[strings.ToLower(query.Diet)]; exists {
-		config.DB = config.DB.Where(dietField+" = ?", true)
+		r.db = r.db.Where(dietField+" = ?", true)
 	}
 
 	// Handle ingredient filtering safely
@@ -192,12 +191,12 @@ func (r *RecipeRepositoryImpl) SearchRecipes(query dtos.RecipeQuery) (dtos.Recip
 	}
 
 	if len(ingredientIDs) > 0 {
-		config.DB = config.DB.Joins("JOIN recipe_items ri ON recipes.id = ri.recipe_id").
+		r.db = r.db.Joins("JOIN recipe_items ri ON recipes.id = ri.recipe_id").
 			Where("ri.item_id IN ?", ingredientIDs).
 			Distinct("recipes.*") // Prevent duplicates
 	}
 
-	if err := config.DB.Preload("Ingredients.Item").Find(&recipes).Error; err != nil {
+	if err := r.db.Preload("Ingredients.Item").Find(&recipes).Error; err != nil {
 		return dtos.RecipesResponse{}, err
 	}
 

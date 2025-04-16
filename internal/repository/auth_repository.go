@@ -3,7 +3,6 @@ package repository
 import (
 	"errors"
 
-	"github.com/GroceryTrak/GroceryTrakService/config"
 	"github.com/GroceryTrak/GroceryTrakService/internal/dtos"
 	"github.com/GroceryTrak/GroceryTrakService/internal/models"
 	"github.com/GroceryTrak/GroceryTrakService/internal/utils"
@@ -25,7 +24,7 @@ func NewAuthRepository(db *gorm.DB) AuthRepository {
 
 func (r *AuthRepositoryImpl) RegisterUser(req dtos.RegisterRequest, role string) (dtos.RegisterResponse, error) {
 	var existingUser models.User
-	result := config.DB.Where("username = ?", req.Username).First(&existingUser).Error
+	result := r.db.Where("username = ?", req.Username).First(&existingUser).Error
 	if result == nil {
 		return dtos.RegisterResponse{}, errors.New("user already exists")
 	}
@@ -36,7 +35,7 @@ func (r *AuthRepositoryImpl) RegisterUser(req dtos.RegisterRequest, role string)
 		Role:     "user",
 	}
 
-	if err := config.DB.Create(&user).Error; err != nil {
+	if err := r.db.Create(&user).Error; err != nil {
 		return dtos.RegisterResponse{}, err
 	}
 
@@ -45,7 +44,7 @@ func (r *AuthRepositoryImpl) RegisterUser(req dtos.RegisterRequest, role string)
 
 func (r *AuthRepositoryImpl) LoginUser(req dtos.LoginRequest) (dtos.LoginResponse, error) {
 	var user models.User
-	result := config.DB.Where("username = ?", req.Username).First(&user)
+	result := r.db.Where("username = ?", req.Username).First(&user)
 	if result.Error != nil {
 		return dtos.LoginResponse{}, errors.New("user not found")
 	}
