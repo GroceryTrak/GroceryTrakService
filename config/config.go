@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/GroceryTrak/GroceryTrakService/internal/clients"
 	"github.com/GroceryTrak/GroceryTrakService/internal/models"
 	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
@@ -17,9 +18,10 @@ import (
 )
 
 var (
-	RedisClient *redis.Client
-	DB          *gorm.DB
-	Ctx         = context.Background()
+	RedisClient       *redis.Client
+	DB                *gorm.DB
+	Ctx               = context.Background()
+	SpoonacularClient *clients.SpoonacularClient
 )
 
 func LoadConfig() {
@@ -27,6 +29,13 @@ func LoadConfig() {
 	if err != nil {
 		log.Println("No .env file found, using default environment variables")
 	}
+}
+
+func InitSpoonacularClient() {
+	SpoonacularClient = clients.NewSpoonacularClient(
+		os.Getenv("SPOONACULAR_API_URL"),
+		os.Getenv("SPOONACULAR_API_KEY"),
+	)
 }
 
 func InitRedis() {

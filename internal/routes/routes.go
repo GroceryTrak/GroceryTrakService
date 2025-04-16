@@ -10,14 +10,21 @@ import (
 	"github.com/GroceryTrak/GroceryTrakService/internal/repository"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
+	"github.com/redis/go-redis/v9"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
+
+var itemQueueRepo repository.ItemQueueRepository
+
+func InitQueue(redisClient *redis.Client) {
+	itemQueueRepo = repository.NewItemQueueRepository(redisClient)
+}
 
 func SetupDependencies() (*handlers.ItemHandler, *handlers.AuthHandler, *handlers.RecipeHandler, *handlers.UserItemHandler) {
 	itemRepo := repository.NewItemRepository(config.DB)
 	authRepo := repository.NewAuthRepository(config.DB)
 	recipeRepo := repository.NewRecipeRepository(config.DB)
-	userItemRepo := repository.NewUserItemRepository(config.DB)
+	userItemRepo := repository.NewUserItemRepository(config.DB, itemQueueRepo)
 
 	return handlers.NewItemHandler(itemRepo),
 		handlers.NewAuthHandler(authRepo),

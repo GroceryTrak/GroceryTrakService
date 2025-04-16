@@ -5,6 +5,8 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"log"
+	"time"
 
 	"github.com/GroceryTrak/GroceryTrakService/internal/dtos"
 	"github.com/GroceryTrak/GroceryTrakService/internal/models"
@@ -24,11 +26,15 @@ type UserItemRepository interface {
 }
 
 type UserItemRepositoryImpl struct {
-	db *gorm.DB
+	db    *gorm.DB
+	queue ItemQueueRepository
 }
 
-func NewUserItemRepository(db *gorm.DB) UserItemRepository {
-	return &UserItemRepositoryImpl{db: db}
+func NewUserItemRepository(db *gorm.DB, queue ItemQueueRepository) UserItemRepository {
+	return &UserItemRepositoryImpl{
+		db:    db,
+		queue: queue,
+	}
 }
 
 func (r *UserItemRepositoryImpl) GetAllUserItems(userID uint) (dtos.UserItemsResponse, error) {
@@ -297,6 +303,18 @@ Do not include any other text, explanations, or formatting. Return only the JSON
 				}
 				if err := r.db.Create(&item).Error; err != nil {
 					return dtos.UserItemsResponse{}, err
+				}
+
+				if r.queue != nil {
+					queueItem := models.QueueItem{
+						ItemID:    item.ID,
+						Name:      item.Name,
+						CreatedAt: time.Now(),
+						Priority:  models.DefaultPriority,
+					}
+					if err := r.queue.AddItem(context.Background(), queueItem); err != nil {
+						log.Printf("Failed to add item to enrichment queue: %v", err)
+					}
 				}
 			} else {
 				return dtos.UserItemsResponse{}, err

@@ -239,7 +239,7 @@ func (h *UserItemHandler) DetectUserItemsHandler(w http.ResponseWriter, r *http.
 	userItems, err := h.Repo.DetectUserItems(fileBytes, userID, apiKey)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(dtos.InternalServerErrorResponse{Error: "Failed to detect items"})
+		json.NewEncoder(w).Encode(dtos.InternalServerErrorResponse{Error: err.Error()})
 		return
 	}
 

@@ -38,7 +38,7 @@ DB_USER=admin
 DB_PORT=5432
 DB_PASSWORD=adminpassword
 DB_DATABASE=grocerytrak
-
+SSL_MODE=require
 
 REDIS_HOST=redis
 REDIST_PORT=6379
