@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/url"
 	"time"
 
 	"github.com/GroceryTrak/GroceryTrakService/internal/clients"
@@ -71,9 +72,13 @@ func (h *ItemQueueHandler) processBatch(ctx context.Context) error {
 	}
 
 	for _, item := range items {
-		spoonacularItem, err := h.spoonacular.SearchIngredient(ctx, item.Name)
+		encodedName := url.QueryEscape(item.Name)
+		spoonacularItem, err := h.spoonacular.SearchIngredient(ctx, encodedName)
 		if err != nil {
 			log.Printf("Failed to search for item %s: %v", item.Name, err)
+			if err := h.queue.RemoveItem(ctx, item); err != nil {
+				log.Printf("Failed to remove item from queue: %v", err)
+			}
 			continue
 		}
 

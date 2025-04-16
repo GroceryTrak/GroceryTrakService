@@ -1,9 +1,15 @@
 package repository
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
+	"github.com/GroceryTrak/GroceryTrakService/internal/clients"
 	"github.com/GroceryTrak/GroceryTrakService/internal/dtos"
 	"github.com/GroceryTrak/GroceryTrakService/internal/models"
 	"gorm.io/gorm"
@@ -18,11 +24,17 @@ type RecipeRepository interface {
 }
 
 type RecipeRepositoryImpl struct {
-	db *gorm.DB
+	db          *gorm.DB
+	spoonacular *clients.SpoonacularClient
+	itemQueue   ItemQueueRepository
 }
 
-func NewRecipeRepository(db *gorm.DB) RecipeRepository {
-	return &RecipeRepositoryImpl{db: db}
+func NewRecipeRepository(db *gorm.DB, spoonacular *clients.SpoonacularClient, itemQueue ItemQueueRepository) RecipeRepository {
+	return &RecipeRepositoryImpl{
+		db:          db,
+		spoonacular: spoonacular,
+		itemQueue:   itemQueue,
+	}
 }
 
 func (r *RecipeRepositoryImpl) GetRecipe(id uint) (*dtos.RecipeResponse, error) {
@@ -344,7 +356,12 @@ func (r *RecipeRepositoryImpl) SearchRecipes(query dtos.RecipeQuery) (dtos.Recip
 	}
 
 	var dietCounts []dtos.DietCount
-	if err := db.Model(&models.Recipe{}).
+	countQuery := r.db.Model(&models.Recipe{})
+	if len(ingredientIDs) > 0 {
+		countQuery = countQuery.Joins("JOIN recipe_items ri ON recipes.id = ri.recipe_id").
+			Where("ri.item_id IN ?", ingredientIDs)
+	}
+	if err := countQuery.
 		Select("vegan, vegetarian, COUNT(*) as count").
 		Group("vegan, vegetarian").
 		Scan(&dietCounts).Error; err != nil {
@@ -358,6 +375,192 @@ func (r *RecipeRepositoryImpl) SearchRecipes(query dtos.RecipeQuery) (dtos.Recip
 
 	if err := db.Preload("Ingredients.Item").Preload("Nutrients").Preload("Instructions").Find(&recipes).Error; err != nil {
 		return dtos.RecipesResponse{}, err
+	}
+
+	// If no recipes found in database, search Spoonacular API
+	if len(recipes) == 0 {
+		// Get ingredient names for the API call
+		var ingredientNames []string
+		for _, id := range ingredientIDs {
+			var item models.Item
+			if err := r.db.First(&item, id).Error; err == nil {
+				ingredientNames = append(ingredientNames, item.Name)
+			}
+		}
+
+		// Build API URL
+		apiURL := fmt.Sprintf("%s/recipes/complexSearch", r.spoonacular.GetBaseURL())
+		params := map[string]string{
+			"apiKey":                r.spoonacular.GetAPIKey(),
+			"addRecipeInstructions": "true",
+			"addRecipeNutrition":    "true",
+			"number":                "2",
+		}
+
+		if len(ingredientNames) > 0 {
+			params["includeIngredients"] = strings.Join(ingredientNames, ",")
+		}
+
+		if query.Diet != "" {
+			params["diet"] = query.Diet
+		}
+
+		if query.Title != "" {
+			params["titleMatch"] = query.Title
+		}
+
+		// Make API request
+		req, err := http.NewRequest("GET", apiURL, nil)
+		if err != nil {
+			return dtos.RecipesResponse{}, err
+		}
+
+		q := req.URL.Query()
+		for k, v := range params {
+			q.Add(k, v)
+		}
+		req.URL.RawQuery = q.Encode()
+
+		resp, err := r.spoonacular.GetClient().Do(req)
+		if err != nil {
+			return dtos.RecipesResponse{}, err
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			return dtos.RecipesResponse{}, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		}
+
+		var apiResponse struct {
+			Results []struct {
+				ID                 int     `json:"id"`
+				Title              string  `json:"title"`
+				Image              string  `json:"image"`
+				ReadyInMinutes     int     `json:"readyInMinutes"`
+				PreparationMinutes int     `json:"preparationMinutes"`
+				CookingMinutes     int     `json:"cookingMinutes"`
+				Servings           float32 `json:"servings"`
+				Summary            string  `json:"summary"`
+				Vegan              bool    `json:"vegan"`
+				Vegetarian         bool    `json:"vegetarian"`
+				Nutrition          struct {
+					Nutrients []struct {
+						Name                string  `json:"name"`
+						Amount              float64 `json:"amount"`
+						Unit                string  `json:"unit"`
+						PercentOfDailyNeeds float64 `json:"percentOfDailyNeeds"`
+					} `json:"nutrients"`
+					Ingredients []struct {
+						ID     int     `json:"id"`
+						Name   string  `json:"name"`
+						Amount float64 `json:"amount"`
+						Unit   string  `json:"unit"`
+					} `json:"ingredients"`
+				} `json:"nutrition"`
+				AnalyzedInstructions []struct {
+					Steps []struct {
+						Number int    `json:"number"`
+						Step   string `json:"step"`
+					} `json:"steps"`
+				} `json:"analyzedInstructions"`
+			} `json:"results"`
+		}
+
+		if err := json.NewDecoder(resp.Body).Decode(&apiResponse); err != nil {
+			return dtos.RecipesResponse{}, err
+		}
+
+		totalCount = int64(len(apiResponse.Results))
+
+		// Process each recipe from API
+		for _, apiRecipe := range apiResponse.Results {
+			// Check if recipe already exists
+			var existingRecipe models.Recipe
+			if err := r.db.Where("spoonacular_id = ?", apiRecipe.ID).First(&existingRecipe).Error; err == nil {
+				recipes = append(recipes, existingRecipe)
+				continue
+			}
+
+			// Create new recipe
+			recipe := models.Recipe{
+				SpoonacularID: uint(apiRecipe.ID),
+				Title:         apiRecipe.Title,
+				Summary:       apiRecipe.Summary,
+				Image:         apiRecipe.Image,
+				Servings:      apiRecipe.Servings,
+				ReadyTime:     int16(apiRecipe.ReadyInMinutes),
+				CookingTime:   int16(apiRecipe.CookingMinutes),
+				PrepTime:      int16(apiRecipe.PreparationMinutes),
+				Vegan:         apiRecipe.Vegan,
+				Vegetarian:    apiRecipe.Vegetarian,
+			}
+
+			// Create nutrients
+			recipe.Nutrients = make([]models.RecipeNutrient, len(apiRecipe.Nutrition.Nutrients))
+			for i, n := range apiRecipe.Nutrition.Nutrients {
+				if n.Name == "Calories" {
+					recipe.KCal = float32(n.Amount)
+				}
+				recipe.Nutrients[i] = models.RecipeNutrient{
+					Name:                n.Name,
+					Amount:              float64(n.Amount),
+					Unit:                n.Unit,
+					PercentOfDailyNeeds: float64(n.PercentOfDailyNeeds),
+				}
+			}
+
+			// Create instructions
+			if len(apiRecipe.AnalyzedInstructions) > 0 {
+				recipe.Instructions = make([]models.RecipeInstruction, len(apiRecipe.AnalyzedInstructions[0].Steps))
+				for i, step := range apiRecipe.AnalyzedInstructions[0].Steps {
+					recipe.Instructions[i] = models.RecipeInstruction{
+						Number: step.Number,
+						Step:   step.Step,
+					}
+				}
+			}
+
+			// Create ingredients
+			recipe.Ingredients = make([]models.RecipeItem, len(apiRecipe.Nutrition.Ingredients))
+			for i, ing := range apiRecipe.Nutrition.Ingredients {
+				// Check if item exists
+				var item models.Item
+				if err := r.db.Where("spoonacular_id = ?", ing.ID).First(&item).Error; err != nil {
+					// Create new item
+					item = models.Item{
+						Name:          ing.Name,
+						SpoonacularID: uint(ing.ID),
+					}
+					if err := r.db.Create(&item).Error; err != nil {
+						return dtos.RecipesResponse{}, err
+					}
+
+					// Add to item queue for enrichment
+					queueItem := models.QueueItem{
+						ItemID:    item.ID,
+						Name:      item.Name,
+						CreatedAt: time.Now(),
+						Priority:  models.DefaultPriority,
+					}
+					if err := r.itemQueue.AddItem(context.Background(), queueItem); err != nil {
+						return dtos.RecipesResponse{}, err
+					}
+				}
+
+				recipe.Ingredients[i] = models.RecipeItem{
+					ItemID: item.ID,
+					Amount: float32(ing.Amount),
+					Unit:   ing.Unit,
+				}
+			}
+
+			// Save recipe
+			if err := r.db.Create(&recipe).Error; err != nil {
+				return dtos.RecipesResponse{}, err
+			}
+
+			recipes = append(recipes, recipe)
+		}
 	}
 
 	recipeResponses := make([]dtos.RecipeResponse, len(recipes))

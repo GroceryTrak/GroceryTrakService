@@ -23,7 +23,7 @@ func InitQueue(redisClient *redis.Client) {
 func SetupDependencies() (*handlers.ItemHandler, *handlers.AuthHandler, *handlers.RecipeHandler, *handlers.UserItemHandler) {
 	itemRepo := repository.NewItemRepository(config.DB)
 	authRepo := repository.NewAuthRepository(config.DB)
-	recipeRepo := repository.NewRecipeRepository(config.DB)
+	recipeRepo := repository.NewRecipeRepository(config.DB, config.SpoonacularClient, itemQueueRepo)
 	userItemRepo := repository.NewUserItemRepository(config.DB, itemQueueRepo)
 
 	return handlers.NewItemHandler(itemRepo),

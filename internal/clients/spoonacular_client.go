@@ -101,3 +101,15 @@ func (c *SpoonacularClient) SearchIngredient(ctx context.Context, query string) 
 
 	return &info, nil
 }
+
+func (c *SpoonacularClient) GetBaseURL() string {
+	return c.baseURL
+}
+
+func (c *SpoonacularClient) GetAPIKey() string {
+	return c.apiKey
+}
+
+func (c *SpoonacularClient) GetClient() *http.Client {
+	return c.client
+}
