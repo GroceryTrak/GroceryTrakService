@@ -28,9 +28,9 @@ func (r *ItemRepositoryImpl) GetItem(id uint) (dtos.ItemResponse, error) {
 		return dtos.ItemResponse{}, err
 	}
 
-	nutrients := make([]dtos.NutrientResponse, len(item.Nutrients))
+	nutrients := make([]dtos.ItemNutrientResponse, len(item.Nutrients))
 	for i, n := range item.Nutrients {
-		nutrients[i] = dtos.NutrientResponse{
+		nutrients[i] = dtos.ItemNutrientResponse{
 			Name:                n.Name,
 			Amount:              n.Amount,
 			Unit:                n.Unit,
@@ -57,11 +57,11 @@ func (r *ItemRepositoryImpl) CreateItem(req dtos.ItemRequest) (dtos.ItemResponse
 		Name:          req.Name,
 		Image:         req.Image,
 		SpoonacularID: req.SpoonacularID,
-		Nutrients:     make([]models.Nutrient, len(req.Nutrients)),
+		Nutrients:     make([]models.ItemNutrient, len(req.Nutrients)),
 	}
 
 	for i, n := range req.Nutrients {
-		item.Nutrients[i] = models.Nutrient{
+		item.Nutrients[i] = models.ItemNutrient{
 			Name:                n.Name,
 			Amount:              n.Amount,
 			Unit:                n.Unit,
@@ -78,9 +78,9 @@ func (r *ItemRepositoryImpl) CreateItem(req dtos.ItemRequest) (dtos.ItemResponse
 		return dtos.ItemResponse{}, err
 	}
 
-	nutrientResponses := make([]dtos.NutrientResponse, len(item.Nutrients))
+	nutrientResponses := make([]dtos.ItemNutrientResponse, len(item.Nutrients))
 	for i, n := range item.Nutrients {
-		nutrientResponses[i] = dtos.NutrientResponse{
+		nutrientResponses[i] = dtos.ItemNutrientResponse{
 			Name:                n.Name,
 			Amount:              n.Amount,
 			Unit:                n.Unit,
@@ -103,13 +103,13 @@ func (r *ItemRepositoryImpl) UpdateItem(id uint, req dtos.ItemRequest) (dtos.Ite
 		return dtos.ItemResponse{}, err
 	}
 
-	if err := r.db.Where("item_id = ?", id).Delete(&models.Nutrient{}).Error; err != nil {
+	if err := r.db.Where("item_id = ?", id).Delete(&models.ItemNutrient{}).Error; err != nil {
 		return dtos.ItemResponse{}, err
 	}
 
-	modelNutrients := make([]models.Nutrient, len(req.Nutrients))
+	modelNutrients := make([]models.ItemNutrient, len(req.Nutrients))
 	for i, n := range req.Nutrients {
-		modelNutrients[i] = models.Nutrient{
+		modelNutrients[i] = models.ItemNutrient{
 			ItemID:              id,
 			Name:                n.Name,
 			Amount:              n.Amount,
@@ -145,9 +145,9 @@ func (r *ItemRepositoryImpl) UpdateItem(id uint, req dtos.ItemRequest) (dtos.Ite
 		return dtos.ItemResponse{}, err
 	}
 
-	nutrients := make([]dtos.NutrientResponse, len(item.Nutrients))
+	nutrients := make([]dtos.ItemNutrientResponse, len(item.Nutrients))
 	for i, n := range item.Nutrients {
-		nutrients[i] = dtos.NutrientResponse{
+		nutrients[i] = dtos.ItemNutrientResponse{
 			Name:                n.Name,
 			Amount:              n.Amount,
 			Unit:                n.Unit,
@@ -165,7 +165,7 @@ func (r *ItemRepositoryImpl) UpdateItem(id uint, req dtos.ItemRequest) (dtos.Ite
 }
 
 func (r *ItemRepositoryImpl) DeleteItem(id uint) error {
-	if err := r.db.Where("item_id = ?", id).Delete(&models.Nutrient{}).Error; err != nil {
+	if err := r.db.Where("item_id = ?", id).Delete(&models.ItemNutrient{}).Error; err != nil {
 		return err
 	}
 	return r.db.Delete(&models.Item{}, "id = ?", id).Error
@@ -182,9 +182,9 @@ func (r *ItemRepositoryImpl) SearchItems(keyword string) (dtos.ItemsResponse, er
 
 	var itemResponses []dtos.ItemResponse
 	for _, item := range items {
-		nutrients := make([]dtos.NutrientResponse, len(item.Nutrients))
+		nutrients := make([]dtos.ItemNutrientResponse, len(item.Nutrients))
 		for i, n := range item.Nutrients {
-			nutrients[i] = dtos.NutrientResponse{
+			nutrients[i] = dtos.ItemNutrientResponse{
 				Name:                n.Name,
 				Amount:              n.Amount,
 				Unit:                n.Unit,

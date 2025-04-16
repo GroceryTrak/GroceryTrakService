@@ -27,7 +27,7 @@ func NewRecipeRepository(db *gorm.DB) RecipeRepository {
 
 func (r *RecipeRepositoryImpl) GetRecipe(id uint) (*dtos.RecipeResponse, error) {
 	var recipe models.Recipe
-	if err := r.db.Preload("Ingredients.Item").First(&recipe, id).Error; err != nil {
+	if err := r.db.Preload("Ingredients.Item").Preload("Nutrients").Preload("Instructions").First(&recipe, id).Error; err != nil {
 		return nil, err
 	}
 	ingredients := make([]dtos.RecipeItemResponse, len(recipe.Ingredients))
@@ -44,31 +44,57 @@ func (r *RecipeRepositoryImpl) GetRecipe(id uint) (*dtos.RecipeResponse, error) 
 		}
 	}
 
+	nutrients := make([]dtos.RecipeNutrientResponse, len(recipe.Nutrients))
+	for i, n := range recipe.Nutrients {
+		nutrients[i] = dtos.RecipeNutrientResponse{
+			Name:                n.Name,
+			Amount:              n.Amount,
+			Unit:                n.Unit,
+			PercentOfDailyNeeds: n.PercentOfDailyNeeds,
+		}
+	}
+
+	instructions := make([]dtos.RecipeInstructionResponse, len(recipe.Instructions))
+	for i, inst := range recipe.Instructions {
+		instructions[i] = dtos.RecipeInstructionResponse{
+			Number: inst.Number,
+			Step:   inst.Step,
+		}
+	}
+
 	return &dtos.RecipeResponse{
-		ID:          recipe.ID,
-		Title:       recipe.Title,
-		ReadyTime:   recipe.ReadyTime,
-		CookingTime: recipe.CookingTime,
-		PrepTime:    recipe.PrepTime,
-		Image:       recipe.Image,
-		KCal:        recipe.KCal,
-		Vegan:       recipe.Vegan,
-		Vegetarian:  recipe.Vegetarian,
-		Ingredients: ingredients,
+		ID:           recipe.ID,
+		Title:        recipe.Title,
+		Summary:      recipe.Summary,
+		Instructions: instructions,
+		Servings:     recipe.Servings,
+		ReadyTime:    recipe.ReadyTime,
+		CookingTime:  recipe.CookingTime,
+		PrepTime:     recipe.PrepTime,
+		Image:        recipe.Image,
+		KCal:         recipe.KCal,
+		Vegan:        recipe.Vegan,
+		Vegetarian:   recipe.Vegetarian,
+		Ingredients:  ingredients,
+		Nutrients:    nutrients,
 	}, nil
 }
 
 func (r *RecipeRepositoryImpl) CreateRecipe(req dtos.RecipeRequest) (*dtos.RecipeResponse, error) {
 	recipe := models.Recipe{
-		Title:       req.Title,
-		ReadyTime:   req.ReadyTime,
-		CookingTime: req.CookingTime,
-		PrepTime:    req.PrepTime,
-		Image:       req.Image,
-		KCal:        req.KCal,
-		Vegan:       req.Vegan,
-		Vegetarian:  req.Vegetarian,
-		Ingredients: make([]models.RecipeItem, len(req.Ingredients)),
+		Title:        req.Title,
+		Summary:      req.Summary,
+		Servings:     req.Servings,
+		ReadyTime:    req.ReadyTime,
+		CookingTime:  req.CookingTime,
+		PrepTime:     req.PrepTime,
+		Image:        req.Image,
+		KCal:         req.KCal,
+		Vegan:        req.Vegan,
+		Vegetarian:   req.Vegetarian,
+		Ingredients:  make([]models.RecipeItem, len(req.Ingredients)),
+		Nutrients:    make([]models.RecipeNutrient, len(req.Nutrients)),
+		Instructions: make([]models.RecipeInstruction, len(req.Instructions)),
 	}
 
 	for i, item := range req.Ingredients {
@@ -79,11 +105,27 @@ func (r *RecipeRepositoryImpl) CreateRecipe(req dtos.RecipeRequest) (*dtos.Recip
 		}
 	}
 
+	for i, n := range req.Nutrients {
+		recipe.Nutrients[i] = models.RecipeNutrient{
+			Name:                n.Name,
+			Amount:              n.Amount,
+			Unit:                n.Unit,
+			PercentOfDailyNeeds: n.PercentOfDailyNeeds,
+		}
+	}
+
+	for i, inst := range req.Instructions {
+		recipe.Instructions[i] = models.RecipeInstruction{
+			Number: inst.Number,
+			Step:   inst.Step,
+		}
+	}
+
 	if err := r.db.Create(&recipe).Error; err != nil {
 		return nil, err
 	}
 
-	if err := r.db.Preload("Ingredients.Item").First(&recipe, recipe.ID).Error; err != nil {
+	if err := r.db.Preload("Ingredients.Item").Preload("Nutrients").Preload("Instructions").First(&recipe, recipe.ID).Error; err != nil {
 		return nil, err
 	}
 
@@ -101,27 +143,51 @@ func (r *RecipeRepositoryImpl) CreateRecipe(req dtos.RecipeRequest) (*dtos.Recip
 		}
 	}
 
+	nutrients := make([]dtos.RecipeNutrientResponse, len(recipe.Nutrients))
+	for i, n := range recipe.Nutrients {
+		nutrients[i] = dtos.RecipeNutrientResponse{
+			Name:                n.Name,
+			Amount:              n.Amount,
+			Unit:                n.Unit,
+			PercentOfDailyNeeds: n.PercentOfDailyNeeds,
+		}
+	}
+
+	instructions := make([]dtos.RecipeInstructionResponse, len(recipe.Instructions))
+	for i, inst := range recipe.Instructions {
+		instructions[i] = dtos.RecipeInstructionResponse{
+			Number: inst.Number,
+			Step:   inst.Step,
+		}
+	}
+
 	return &dtos.RecipeResponse{
-		ID:          recipe.ID,
-		Title:       recipe.Title,
-		ReadyTime:   recipe.ReadyTime,
-		CookingTime: recipe.CookingTime,
-		PrepTime:    recipe.PrepTime,
-		Image:       recipe.Image,
-		KCal:        recipe.KCal,
-		Vegan:       recipe.Vegan,
-		Vegetarian:  recipe.Vegetarian,
-		Ingredients: ingredients,
+		ID:           recipe.ID,
+		Title:        recipe.Title,
+		Summary:      recipe.Summary,
+		Instructions: instructions,
+		Servings:     recipe.Servings,
+		ReadyTime:    recipe.ReadyTime,
+		CookingTime:  recipe.CookingTime,
+		PrepTime:     recipe.PrepTime,
+		Image:        recipe.Image,
+		KCal:         recipe.KCal,
+		Vegan:        recipe.Vegan,
+		Vegetarian:   recipe.Vegetarian,
+		Ingredients:  ingredients,
+		Nutrients:    nutrients,
 	}, nil
 }
 
 func (r *RecipeRepositoryImpl) UpdateRecipe(id uint, req dtos.RecipeRequest) (*dtos.RecipeResponse, error) {
 	var recipe models.Recipe
-	if err := r.db.Preload("Ingredients.Item").First(&recipe, id).Error; err != nil {
+	if err := r.db.Preload("Ingredients.Item").Preload("Nutrients").Preload("Instructions").First(&recipe, id).Error; err != nil {
 		return nil, err
 	}
 
 	recipe.Title = req.Title
+	recipe.Summary = req.Summary
+	recipe.Servings = req.Servings
 	recipe.ReadyTime = req.ReadyTime
 	recipe.CookingTime = req.CookingTime
 	recipe.PrepTime = req.PrepTime
@@ -130,7 +196,59 @@ func (r *RecipeRepositoryImpl) UpdateRecipe(id uint, req dtos.RecipeRequest) (*d
 	recipe.Vegan = req.Vegan
 	recipe.Vegetarian = req.Vegetarian
 
-	if err := r.db.Save(&recipe).Error; err != nil {
+	if err := r.db.Where("recipe_id = ?", id).Delete(&models.RecipeNutrient{}).Error; err != nil {
+		return nil, err
+	}
+
+	if err := r.db.Where("recipe_id = ?", id).Delete(&models.RecipeInstruction{}).Error; err != nil {
+		return nil, err
+	}
+
+	modelNutrients := make([]models.RecipeNutrient, len(req.Nutrients))
+	for i, n := range req.Nutrients {
+		modelNutrients[i] = models.RecipeNutrient{
+			RecipeID:            id,
+			Name:                n.Name,
+			Amount:              n.Amount,
+			Unit:                n.Unit,
+			PercentOfDailyNeeds: n.PercentOfDailyNeeds,
+		}
+	}
+
+	modelInstructions := make([]models.RecipeInstruction, len(req.Instructions))
+	for i, inst := range req.Instructions {
+		modelInstructions[i] = models.RecipeInstruction{
+			RecipeID: id,
+			Number:   inst.Number,
+			Step:     inst.Step,
+		}
+	}
+
+	tx := r.db.Begin()
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+
+	if err := tx.Save(&recipe).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	if err := tx.Create(&modelNutrients).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	if err := tx.Create(&modelInstructions).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, err
+	}
+
+	if err := r.db.Preload("Ingredients.Item").Preload("Nutrients").Preload("Instructions").First(&recipe, id).Error; err != nil {
 		return nil, err
 	}
 
@@ -148,25 +266,50 @@ func (r *RecipeRepositoryImpl) UpdateRecipe(id uint, req dtos.RecipeRequest) (*d
 		}
 	}
 
+	nutrients := make([]dtos.RecipeNutrientResponse, len(recipe.Nutrients))
+	for i, n := range recipe.Nutrients {
+		nutrients[i] = dtos.RecipeNutrientResponse{
+			Name:                n.Name,
+			Amount:              n.Amount,
+			Unit:                n.Unit,
+			PercentOfDailyNeeds: n.PercentOfDailyNeeds,
+		}
+	}
+
+	instructions := make([]dtos.RecipeInstructionResponse, len(recipe.Instructions))
+	for i, inst := range recipe.Instructions {
+		instructions[i] = dtos.RecipeInstructionResponse{
+			Number: inst.Number,
+			Step:   inst.Step,
+		}
+	}
+
 	return &dtos.RecipeResponse{
-		ID:          recipe.ID,
-		Title:       recipe.Title,
-		ReadyTime:   recipe.ReadyTime,
-		CookingTime: recipe.CookingTime,
-		PrepTime:    recipe.PrepTime,
-		Image:       recipe.Image,
-		KCal:        recipe.KCal,
-		Vegan:       recipe.Vegan,
-		Vegetarian:  recipe.Vegetarian,
-		Ingredients: ingredients,
+		ID:           recipe.ID,
+		Title:        recipe.Title,
+		Summary:      recipe.Summary,
+		Instructions: instructions,
+		Servings:     recipe.Servings,
+		ReadyTime:    recipe.ReadyTime,
+		CookingTime:  recipe.CookingTime,
+		PrepTime:     recipe.PrepTime,
+		Image:        recipe.Image,
+		KCal:         recipe.KCal,
+		Vegan:        recipe.Vegan,
+		Vegetarian:   recipe.Vegetarian,
+		Ingredients:  ingredients,
+		Nutrients:    nutrients,
 	}, nil
 }
 
 func (r *RecipeRepositoryImpl) DeleteRecipe(id uint) error {
-	if err := r.db.Delete(&models.Recipe{}, id).Error; err != nil {
+	if err := r.db.Where("recipe_id = ?", id).Delete(&models.RecipeNutrient{}).Error; err != nil {
 		return err
 	}
-	return nil
+	if err := r.db.Where("recipe_id = ?", id).Delete(&models.RecipeInstruction{}).Error; err != nil {
+		return err
+	}
+	return r.db.Delete(&models.Recipe{}, id).Error
 }
 
 func (r *RecipeRepositoryImpl) SearchRecipes(query dtos.RecipeQuery) (dtos.RecipesResponse, error) {
@@ -208,7 +351,7 @@ func (r *RecipeRepositoryImpl) SearchRecipes(query dtos.RecipeQuery) (dtos.Recip
 		totalCount += dc.Count
 	}
 
-	if err := db.Preload("Ingredients.Item").Find(&recipes).Error; err != nil {
+	if err := db.Preload("Ingredients.Item").Preload("Nutrients").Preload("Instructions").Find(&recipes).Error; err != nil {
 		return dtos.RecipesResponse{}, err
 	}
 
@@ -227,17 +370,40 @@ func (r *RecipeRepositoryImpl) SearchRecipes(query dtos.RecipeQuery) (dtos.Recip
 				Unit:   item.Unit,
 			}
 		}
+
+		nutrients := make([]dtos.RecipeNutrientResponse, len(recipe.Nutrients))
+		for j, n := range recipe.Nutrients {
+			nutrients[j] = dtos.RecipeNutrientResponse{
+				Name:                n.Name,
+				Amount:              n.Amount,
+				Unit:                n.Unit,
+				PercentOfDailyNeeds: n.PercentOfDailyNeeds,
+			}
+		}
+
+		instructions := make([]dtos.RecipeInstructionResponse, len(recipe.Instructions))
+		for j, inst := range recipe.Instructions {
+			instructions[j] = dtos.RecipeInstructionResponse{
+				Number: inst.Number,
+				Step:   inst.Step,
+			}
+		}
+
 		recipeResponses[i] = dtos.RecipeResponse{
-			ID:          recipe.ID,
-			Title:       recipe.Title,
-			ReadyTime:   recipe.ReadyTime,
-			CookingTime: recipe.CookingTime,
-			PrepTime:    recipe.PrepTime,
-			Image:       recipe.Image,
-			KCal:        recipe.KCal,
-			Vegan:       recipe.Vegan,
-			Vegetarian:  recipe.Vegetarian,
-			Ingredients: ingredients,
+			ID:           recipe.ID,
+			Title:        recipe.Title,
+			Summary:      recipe.Summary,
+			Instructions: instructions,
+			Servings:     recipe.Servings,
+			ReadyTime:    recipe.ReadyTime,
+			CookingTime:  recipe.CookingTime,
+			PrepTime:     recipe.PrepTime,
+			Image:        recipe.Image,
+			KCal:         recipe.KCal,
+			Vegan:        recipe.Vegan,
+			Vegetarian:   recipe.Vegetarian,
+			Ingredients:  ingredients,
+			Nutrients:    nutrients,
 		}
 	}
 

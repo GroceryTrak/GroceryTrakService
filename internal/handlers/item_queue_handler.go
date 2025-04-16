@@ -77,9 +77,9 @@ func (h *ItemQueueHandler) processBatch(ctx context.Context) error {
 			continue
 		}
 
-		nutrients := make([]models.Nutrient, len(spoonacularItem.Nutrition.Nutrients))
+		nutrients := make([]models.ItemNutrient, len(spoonacularItem.Nutrition.Nutrients))
 		for i, n := range spoonacularItem.Nutrition.Nutrients {
-			nutrients[i] = models.Nutrient{
+			nutrients[i] = models.ItemNutrient{
 				Name:                n.Name,
 				Amount:              n.Amount,
 				Unit:                n.Unit,
@@ -91,11 +91,11 @@ func (h *ItemQueueHandler) processBatch(ctx context.Context) error {
 			Name:          item.Name,
 			Image:         spoonacularItem.Image,
 			SpoonacularID: uint(spoonacularItem.ID),
-			Nutrients:     make([]dtos.NutrientRequest, len(nutrients)),
+			Nutrients:     make([]dtos.ItemNutrientRequest, len(nutrients)),
 		}
 
 		for i, n := range nutrients {
-			updateReq.Nutrients[i] = dtos.NutrientRequest{
+			updateReq.Nutrients[i] = dtos.ItemNutrientRequest{
 				Name:                n.Name,
 				Amount:              n.Amount,
 				Unit:                n.Unit,
