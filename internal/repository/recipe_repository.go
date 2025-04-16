@@ -63,38 +63,40 @@ func (r *RecipeRepositoryImpl) GetRecipe(id uint) (*dtos.RecipeResponse, error) 
 	}
 
 	return &dtos.RecipeResponse{
-		ID:           recipe.ID,
-		Title:        recipe.Title,
-		Summary:      recipe.Summary,
-		Instructions: instructions,
-		Servings:     recipe.Servings,
-		ReadyTime:    recipe.ReadyTime,
-		CookingTime:  recipe.CookingTime,
-		PrepTime:     recipe.PrepTime,
-		Image:        recipe.Image,
-		KCal:         recipe.KCal,
-		Vegan:        recipe.Vegan,
-		Vegetarian:   recipe.Vegetarian,
-		Ingredients:  ingredients,
-		Nutrients:    nutrients,
+		ID:            recipe.ID,
+		Title:         recipe.Title,
+		Summary:       recipe.Summary,
+		SpoonacularID: recipe.SpoonacularID,
+		Instructions:  instructions,
+		Servings:      recipe.Servings,
+		ReadyTime:     recipe.ReadyTime,
+		CookingTime:   recipe.CookingTime,
+		PrepTime:      recipe.PrepTime,
+		Image:         recipe.Image,
+		KCal:          recipe.KCal,
+		Vegan:         recipe.Vegan,
+		Vegetarian:    recipe.Vegetarian,
+		Ingredients:   ingredients,
+		Nutrients:     nutrients,
 	}, nil
 }
 
 func (r *RecipeRepositoryImpl) CreateRecipe(req dtos.RecipeRequest) (*dtos.RecipeResponse, error) {
 	recipe := models.Recipe{
-		Title:        req.Title,
-		Summary:      req.Summary,
-		Servings:     req.Servings,
-		ReadyTime:    req.ReadyTime,
-		CookingTime:  req.CookingTime,
-		PrepTime:     req.PrepTime,
-		Image:        req.Image,
-		KCal:         req.KCal,
-		Vegan:        req.Vegan,
-		Vegetarian:   req.Vegetarian,
-		Ingredients:  make([]models.RecipeItem, len(req.Ingredients)),
-		Nutrients:    make([]models.RecipeNutrient, len(req.Nutrients)),
-		Instructions: make([]models.RecipeInstruction, len(req.Instructions)),
+		Title:         req.Title,
+		Summary:       req.Summary,
+		SpoonacularID: req.SpoonacularID,
+		Servings:      req.Servings,
+		ReadyTime:     req.ReadyTime,
+		CookingTime:   req.CookingTime,
+		PrepTime:      req.PrepTime,
+		Image:         req.Image,
+		KCal:          req.KCal,
+		Vegan:         req.Vegan,
+		Vegetarian:    req.Vegetarian,
+		Ingredients:   make([]models.RecipeItem, len(req.Ingredients)),
+		Nutrients:     make([]models.RecipeNutrient, len(req.Nutrients)),
+		Instructions:  make([]models.RecipeInstruction, len(req.Instructions)),
 	}
 
 	for i, item := range req.Ingredients {
@@ -162,20 +164,21 @@ func (r *RecipeRepositoryImpl) CreateRecipe(req dtos.RecipeRequest) (*dtos.Recip
 	}
 
 	return &dtos.RecipeResponse{
-		ID:           recipe.ID,
-		Title:        recipe.Title,
-		Summary:      recipe.Summary,
-		Instructions: instructions,
-		Servings:     recipe.Servings,
-		ReadyTime:    recipe.ReadyTime,
-		CookingTime:  recipe.CookingTime,
-		PrepTime:     recipe.PrepTime,
-		Image:        recipe.Image,
-		KCal:         recipe.KCal,
-		Vegan:        recipe.Vegan,
-		Vegetarian:   recipe.Vegetarian,
-		Ingredients:  ingredients,
-		Nutrients:    nutrients,
+		ID:            recipe.ID,
+		Title:         recipe.Title,
+		Summary:       recipe.Summary,
+		SpoonacularID: recipe.SpoonacularID,
+		Instructions:  instructions,
+		Servings:      recipe.Servings,
+		ReadyTime:     recipe.ReadyTime,
+		CookingTime:   recipe.CookingTime,
+		PrepTime:      recipe.PrepTime,
+		Image:         recipe.Image,
+		KCal:          recipe.KCal,
+		Vegan:         recipe.Vegan,
+		Vegetarian:    recipe.Vegetarian,
+		Ingredients:   ingredients,
+		Nutrients:     nutrients,
 	}, nil
 }
 
@@ -187,6 +190,7 @@ func (r *RecipeRepositoryImpl) UpdateRecipe(id uint, req dtos.RecipeRequest) (*d
 
 	recipe.Title = req.Title
 	recipe.Summary = req.Summary
+	recipe.SpoonacularID = req.SpoonacularID
 	recipe.Servings = req.Servings
 	recipe.ReadyTime = req.ReadyTime
 	recipe.CookingTime = req.CookingTime
@@ -285,20 +289,21 @@ func (r *RecipeRepositoryImpl) UpdateRecipe(id uint, req dtos.RecipeRequest) (*d
 	}
 
 	return &dtos.RecipeResponse{
-		ID:           recipe.ID,
-		Title:        recipe.Title,
-		Summary:      recipe.Summary,
-		Instructions: instructions,
-		Servings:     recipe.Servings,
-		ReadyTime:    recipe.ReadyTime,
-		CookingTime:  recipe.CookingTime,
-		PrepTime:     recipe.PrepTime,
-		Image:        recipe.Image,
-		KCal:         recipe.KCal,
-		Vegan:        recipe.Vegan,
-		Vegetarian:   recipe.Vegetarian,
-		Ingredients:  ingredients,
-		Nutrients:    nutrients,
+		ID:            recipe.ID,
+		Title:         recipe.Title,
+		Summary:       recipe.Summary,
+		SpoonacularID: recipe.SpoonacularID,
+		Instructions:  instructions,
+		Servings:      recipe.Servings,
+		ReadyTime:     recipe.ReadyTime,
+		CookingTime:   recipe.CookingTime,
+		PrepTime:      recipe.PrepTime,
+		Image:         recipe.Image,
+		KCal:          recipe.KCal,
+		Vegan:         recipe.Vegan,
+		Vegetarian:    recipe.Vegetarian,
+		Ingredients:   ingredients,
+		Nutrients:     nutrients,
 	}, nil
 }
 
@@ -390,20 +395,21 @@ func (r *RecipeRepositoryImpl) SearchRecipes(query dtos.RecipeQuery) (dtos.Recip
 		}
 
 		recipeResponses[i] = dtos.RecipeResponse{
-			ID:           recipe.ID,
-			Title:        recipe.Title,
-			Summary:      recipe.Summary,
-			Instructions: instructions,
-			Servings:     recipe.Servings,
-			ReadyTime:    recipe.ReadyTime,
-			CookingTime:  recipe.CookingTime,
-			PrepTime:     recipe.PrepTime,
-			Image:        recipe.Image,
-			KCal:         recipe.KCal,
-			Vegan:        recipe.Vegan,
-			Vegetarian:   recipe.Vegetarian,
-			Ingredients:  ingredients,
-			Nutrients:    nutrients,
+			ID:            recipe.ID,
+			Title:         recipe.Title,
+			Summary:       recipe.Summary,
+			SpoonacularID: recipe.SpoonacularID,
+			Instructions:  instructions,
+			Servings:      recipe.Servings,
+			ReadyTime:     recipe.ReadyTime,
+			CookingTime:   recipe.CookingTime,
+			PrepTime:      recipe.PrepTime,
+			Image:         recipe.Image,
+			KCal:          recipe.KCal,
+			Vegan:         recipe.Vegan,
+			Vegetarian:    recipe.Vegetarian,
+			Ingredients:   ingredients,
+			Nutrients:     nutrients,
 		}
 	}
 
