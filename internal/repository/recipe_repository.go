@@ -171,18 +171,17 @@ func (r *RecipeRepositoryImpl) DeleteRecipe(id uint) error {
 
 func (r *RecipeRepositoryImpl) SearchRecipes(query dtos.RecipeQuery) (dtos.RecipesResponse, error) {
 	var recipes []models.Recipe
+	db := r.db
 
 	if query.Title != "" {
-		r.db = r.db.Where("LOWER(title) LIKE ?", "%"+strings.ToLower(query.Title)+"%")
+		db = db.Where("LOWER(title) LIKE ?", "%"+strings.ToLower(query.Title)+"%")
 	}
 
-	// Handle diet filtering
 	validDiets := map[string]string{"vegan": "vegan", "vegetarian": "vegetarian"}
 	if dietField, exists := validDiets[strings.ToLower(query.Diet)]; exists {
-		r.db = r.db.Where(dietField+" = ?", true)
+		db = db.Where(dietField+" = ?", true)
 	}
 
-	// Handle ingredient filtering safely
 	var ingredientIDs []uint
 	for _, id := range query.Ingredients {
 		if num, err := strconv.ParseUint(id, 10, 32); err == nil {
@@ -191,12 +190,25 @@ func (r *RecipeRepositoryImpl) SearchRecipes(query dtos.RecipeQuery) (dtos.Recip
 	}
 
 	if len(ingredientIDs) > 0 {
-		r.db = r.db.Joins("JOIN recipe_items ri ON recipes.id = ri.recipe_id").
+		db = db.Joins("JOIN recipe_items ri ON recipes.id = ri.recipe_id").
 			Where("ri.item_id IN ?", ingredientIDs).
 			Distinct("recipes.*") // Prevent duplicates
 	}
 
-	if err := r.db.Preload("Ingredients.Item").Find(&recipes).Error; err != nil {
+	var dietCounts []dtos.DietCount
+	if err := db.Model(&models.Recipe{}).
+		Select("vegan, vegetarian, COUNT(*) as count").
+		Group("vegan, vegetarian").
+		Scan(&dietCounts).Error; err != nil {
+		return dtos.RecipesResponse{}, err
+	}
+
+	var totalCount int64
+	for _, dc := range dietCounts {
+		totalCount += dc.Count
+	}
+
+	if err := db.Preload("Ingredients.Item").Find(&recipes).Error; err != nil {
 		return dtos.RecipesResponse{}, err
 	}
 
@@ -229,5 +241,9 @@ func (r *RecipeRepositoryImpl) SearchRecipes(query dtos.RecipeQuery) (dtos.Recip
 		}
 	}
 
-	return dtos.RecipesResponse{Recipes: recipeResponses}, nil
+	return dtos.RecipesResponse{
+		Recipes:    recipeResponses,
+		Count:      int(totalCount),
+		DietCounts: dietCounts,
+	}, nil
 }

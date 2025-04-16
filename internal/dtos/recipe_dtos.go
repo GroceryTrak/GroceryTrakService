@@ -25,8 +25,16 @@ type RecipeResponse struct {
 	Ingredients []RecipeItemResponse `json:"ingredients"`
 }
 
+type DietCount struct {
+	Vegan      bool  `json:"vegan"`
+	Vegetarian bool  `json:"vegetarian"`
+	Count      int64 `json:"count"`
+}
+
 type RecipesResponse struct {
-	Recipes []RecipeResponse `json:"recipes"`
+	Recipes    []RecipeResponse `json:"recipes"`
+	Count      int              `json:"count"`
+	DietCounts []DietCount      `json:"diet_counts"`
 }
 
 type RecipeQuery struct {
