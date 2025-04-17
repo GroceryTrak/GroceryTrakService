@@ -1,7 +1,7 @@
 package models
 
 type ItemNutrient struct {
-	ID                  uint    `gorm:"serial;primaryKey" json:"id"`
+	ID                  uint    `gorm:"primaryKey;autoIncrement" json:"id"`
 	ItemID              uint    `json:"item_id"`
 	Name                string  `gorm:"type:varchar(100);not null" json:"name"`
 	Amount              float64 `json:"amount"`

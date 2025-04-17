@@ -1,7 +1,7 @@
 package models
 
 type Recipe struct {
-	ID            uint                `gorm:"type:serial;primaryKey" json:"id"`
+	ID            uint                `gorm:"primaryKey;autoIncrement" json:"id"`
 	SpoonacularID uint                `json:"spoonacular_id"`
 	Title         string              `gorm:"type:varchar(255);not null" json:"title"`
 	Summary       string              `gorm:"type:text" json:"summary"`
