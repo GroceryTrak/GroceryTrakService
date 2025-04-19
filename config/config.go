@@ -79,7 +79,7 @@ func InitPostgreSQL() {
 
 	// Drop all tables (development only)
 	if os.Getenv("ENV") == "development" {
-		DB.Migrator().DropTable(&models.Recipe{}, &models.Item{}, &models.ItemNutrient{}, &models.RecipeNutrient{}, &models.UserItem{}, &models.RecipeItem{}, &models.User{}, &models.RecipeInstruction{})
+		DB.Migrator().DropTable(&models.Recipe{}, &models.Item{}, &models.ItemNutrient{}, &models.RecipeNutrient{}, &models.UserItem{}, &models.RecipeItem{}, &models.User{}, &models.RecipeInstruction{}, &models.UserPreference{})
 	}
 
 	// Create ENUM types if they don't exist
@@ -96,7 +96,7 @@ func InitPostgreSQL() {
 	}
 
 	// Run migrations in order
-	err = DB.AutoMigrate(&models.User{}, &models.Item{}, &models.ItemNutrient{}, &models.RecipeNutrient{}, &models.UserItem{}, &models.Recipe{}, &models.RecipeItem{}, &models.RecipeInstruction{})
+	err = DB.AutoMigrate(&models.User{}, &models.Item{}, &models.ItemNutrient{}, &models.RecipeNutrient{}, &models.UserItem{}, &models.Recipe{}, &models.RecipeItem{}, &models.RecipeInstruction{}, &models.UserPreference{})
 	if err != nil {
 		log.Fatalf("Failed to migrate table: %v", err)
 	}

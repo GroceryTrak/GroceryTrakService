@@ -94,6 +94,11 @@ func (r *RecipeRepositoryImpl) GetRecipe(id uint) (*dtos.RecipeResponse, error) 
 }
 
 func (r *RecipeRepositoryImpl) CreateRecipe(req dtos.RecipeRequest) (*dtos.RecipeResponse, error) {
+	tx := r.db.Begin()
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+
 	recipe := models.Recipe{
 		Title:         req.Title,
 		Summary:       req.Summary,
@@ -106,21 +111,34 @@ func (r *RecipeRepositoryImpl) CreateRecipe(req dtos.RecipeRequest) (*dtos.Recip
 		KCal:          req.KCal,
 		Vegan:         req.Vegan,
 		Vegetarian:    req.Vegetarian,
-		Ingredients:   make([]models.RecipeItem, len(req.Ingredients)),
-		Nutrients:     make([]models.RecipeNutrient, len(req.Nutrients)),
-		Instructions:  make([]models.RecipeInstruction, len(req.Instructions)),
 	}
 
+	if err := tx.Create(&recipe).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	// Create ingredients
+	ingredients := make([]models.RecipeItem, len(req.Ingredients))
 	for i, item := range req.Ingredients {
-		recipe.Ingredients[i] = models.RecipeItem{
-			ItemID: item.ItemID,
-			Amount: item.Amount,
-			Unit:   item.Unit,
+		ingredients[i] = models.RecipeItem{
+			RecipeID: recipe.ID,
+			ItemID:   item.ItemID,
+			Amount:   item.Amount,
+			Unit:     item.Unit,
 		}
 	}
 
+	if err := tx.Create(&ingredients).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	// Create nutrients
+	nutrients := make([]models.RecipeNutrient, len(req.Nutrients))
 	for i, n := range req.Nutrients {
-		recipe.Nutrients[i] = models.RecipeNutrient{
+		nutrients[i] = models.RecipeNutrient{
+			RecipeID:            recipe.ID,
 			Name:                n.Name,
 			Amount:              n.Amount,
 			Unit:                n.Unit,
@@ -128,14 +146,27 @@ func (r *RecipeRepositoryImpl) CreateRecipe(req dtos.RecipeRequest) (*dtos.Recip
 		}
 	}
 
+	if err := tx.Create(&nutrients).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	// Create instructions
+	instructions := make([]models.RecipeInstruction, len(req.Instructions))
 	for i, inst := range req.Instructions {
-		recipe.Instructions[i] = models.RecipeInstruction{
-			Number: inst.Number,
-			Step:   inst.Step,
+		instructions[i] = models.RecipeInstruction{
+			RecipeID: recipe.ID,
+			Number:   inst.Number,
+			Step:     inst.Step,
 		}
 	}
 
-	if err := r.db.Create(&recipe).Error; err != nil {
+	if err := tx.Create(&instructions).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	if err := tx.Commit().Error; err != nil {
 		return nil, err
 	}
 
@@ -143,9 +174,9 @@ func (r *RecipeRepositoryImpl) CreateRecipe(req dtos.RecipeRequest) (*dtos.Recip
 		return nil, err
 	}
 
-	ingredients := make([]dtos.RecipeItemResponse, len(recipe.Ingredients))
+	ingredientResponses := make([]dtos.RecipeItemResponse, len(recipe.Ingredients))
 	for i, item := range recipe.Ingredients {
-		ingredients[i] = dtos.RecipeItemResponse{
+		ingredientResponses[i] = dtos.RecipeItemResponse{
 			Item: dtos.ItemResponse{
 				ID:            item.Item.ID,
 				Name:          item.Item.Name,
@@ -157,9 +188,9 @@ func (r *RecipeRepositoryImpl) CreateRecipe(req dtos.RecipeRequest) (*dtos.Recip
 		}
 	}
 
-	nutrients := make([]dtos.RecipeNutrientResponse, len(recipe.Nutrients))
+	nutrientResponses := make([]dtos.RecipeNutrientResponse, len(recipe.Nutrients))
 	for i, n := range recipe.Nutrients {
-		nutrients[i] = dtos.RecipeNutrientResponse{
+		nutrientResponses[i] = dtos.RecipeNutrientResponse{
 			Name:                n.Name,
 			Amount:              n.Amount,
 			Unit:                n.Unit,
@@ -167,9 +198,9 @@ func (r *RecipeRepositoryImpl) CreateRecipe(req dtos.RecipeRequest) (*dtos.Recip
 		}
 	}
 
-	instructions := make([]dtos.RecipeInstructionResponse, len(recipe.Instructions))
+	instructionResponses := make([]dtos.RecipeInstructionResponse, len(recipe.Instructions))
 	for i, inst := range recipe.Instructions {
-		instructions[i] = dtos.RecipeInstructionResponse{
+		instructionResponses[i] = dtos.RecipeInstructionResponse{
 			Number: inst.Number,
 			Step:   inst.Step,
 		}
@@ -180,7 +211,7 @@ func (r *RecipeRepositoryImpl) CreateRecipe(req dtos.RecipeRequest) (*dtos.Recip
 		Title:         recipe.Title,
 		Summary:       recipe.Summary,
 		SpoonacularID: recipe.SpoonacularID,
-		Instructions:  instructions,
+		Instructions:  instructionResponses,
 		Servings:      recipe.Servings,
 		ReadyTime:     recipe.ReadyTime,
 		CookingTime:   recipe.CookingTime,
@@ -189,8 +220,8 @@ func (r *RecipeRepositoryImpl) CreateRecipe(req dtos.RecipeRequest) (*dtos.Recip
 		KCal:          recipe.KCal,
 		Vegan:         recipe.Vegan,
 		Vegetarian:    recipe.Vegetarian,
-		Ingredients:   ingredients,
-		Nutrients:     nutrients,
+		Ingredients:   ingredientResponses,
+		Nutrients:     nutrientResponses,
 	}, nil
 }
 
@@ -212,17 +243,31 @@ func (r *RecipeRepositoryImpl) UpdateRecipe(id uint, req dtos.RecipeRequest) (*d
 	recipe.Vegan = req.Vegan
 	recipe.Vegetarian = req.Vegetarian
 
-	if err := r.db.Where("recipe_id = ?", id).Delete(&models.RecipeNutrient{}).Error; err != nil {
+	tx := r.db.Begin()
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+
+	// Delete existing related records
+	if err := tx.Where("recipe_id = ?", id).Delete(&models.RecipeNutrient{}).Error; err != nil {
+		tx.Rollback()
 		return nil, err
 	}
 
-	if err := r.db.Where("recipe_id = ?", id).Delete(&models.RecipeInstruction{}).Error; err != nil {
+	if err := tx.Where("recipe_id = ?", id).Delete(&models.RecipeInstruction{}).Error; err != nil {
+		tx.Rollback()
 		return nil, err
 	}
 
-	modelNutrients := make([]models.RecipeNutrient, len(req.Nutrients))
+	if err := tx.Where("recipe_id = ?", id).Delete(&models.RecipeItem{}).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	// Create new nutrients
+	nutrients := make([]models.RecipeNutrient, len(req.Nutrients))
 	for i, n := range req.Nutrients {
-		modelNutrients[i] = models.RecipeNutrient{
+		nutrients[i] = models.RecipeNutrient{
 			RecipeID:            id,
 			Name:                n.Name,
 			Amount:              n.Amount,
@@ -231,31 +276,44 @@ func (r *RecipeRepositoryImpl) UpdateRecipe(id uint, req dtos.RecipeRequest) (*d
 		}
 	}
 
-	modelInstructions := make([]models.RecipeInstruction, len(req.Instructions))
+	if err := tx.Create(&nutrients).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	// Create new instructions
+	instructions := make([]models.RecipeInstruction, len(req.Instructions))
 	for i, inst := range req.Instructions {
-		modelInstructions[i] = models.RecipeInstruction{
+		instructions[i] = models.RecipeInstruction{
 			RecipeID: id,
 			Number:   inst.Number,
 			Step:     inst.Step,
 		}
 	}
 
-	tx := r.db.Begin()
-	if tx.Error != nil {
-		return nil, tx.Error
+	if err := tx.Create(&instructions).Error; err != nil {
+		tx.Rollback()
+		return nil, err
 	}
 
+	// Create new ingredients
+	ingredients := make([]models.RecipeItem, len(req.Ingredients))
+	for i, item := range req.Ingredients {
+		ingredients[i] = models.RecipeItem{
+			RecipeID: id,
+			ItemID:   item.ItemID,
+			Amount:   item.Amount,
+			Unit:     item.Unit,
+		}
+	}
+
+	if err := tx.Create(&ingredients).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	// Save recipe changes
 	if err := tx.Save(&recipe).Error; err != nil {
-		tx.Rollback()
-		return nil, err
-	}
-
-	if err := tx.Create(&modelNutrients).Error; err != nil {
-		tx.Rollback()
-		return nil, err
-	}
-
-	if err := tx.Create(&modelInstructions).Error; err != nil {
 		tx.Rollback()
 		return nil, err
 	}
@@ -268,9 +326,9 @@ func (r *RecipeRepositoryImpl) UpdateRecipe(id uint, req dtos.RecipeRequest) (*d
 		return nil, err
 	}
 
-	ingredients := make([]dtos.RecipeItemResponse, len(recipe.Ingredients))
+	ingredientResponses := make([]dtos.RecipeItemResponse, len(recipe.Ingredients))
 	for i, item := range recipe.Ingredients {
-		ingredients[i] = dtos.RecipeItemResponse{
+		ingredientResponses[i] = dtos.RecipeItemResponse{
 			Item: dtos.ItemResponse{
 				ID:            item.Item.ID,
 				Name:          item.Item.Name,
@@ -282,9 +340,9 @@ func (r *RecipeRepositoryImpl) UpdateRecipe(id uint, req dtos.RecipeRequest) (*d
 		}
 	}
 
-	nutrients := make([]dtos.RecipeNutrientResponse, len(recipe.Nutrients))
+	nutrientResponses := make([]dtos.RecipeNutrientResponse, len(recipe.Nutrients))
 	for i, n := range recipe.Nutrients {
-		nutrients[i] = dtos.RecipeNutrientResponse{
+		nutrientResponses[i] = dtos.RecipeNutrientResponse{
 			Name:                n.Name,
 			Amount:              n.Amount,
 			Unit:                n.Unit,
@@ -292,9 +350,9 @@ func (r *RecipeRepositoryImpl) UpdateRecipe(id uint, req dtos.RecipeRequest) (*d
 		}
 	}
 
-	instructions := make([]dtos.RecipeInstructionResponse, len(recipe.Instructions))
+	instructionResponses := make([]dtos.RecipeInstructionResponse, len(recipe.Instructions))
 	for i, inst := range recipe.Instructions {
-		instructions[i] = dtos.RecipeInstructionResponse{
+		instructionResponses[i] = dtos.RecipeInstructionResponse{
 			Number: inst.Number,
 			Step:   inst.Step,
 		}
@@ -305,7 +363,7 @@ func (r *RecipeRepositoryImpl) UpdateRecipe(id uint, req dtos.RecipeRequest) (*d
 		Title:         recipe.Title,
 		Summary:       recipe.Summary,
 		SpoonacularID: recipe.SpoonacularID,
-		Instructions:  instructions,
+		Instructions:  instructionResponses,
 		Servings:      recipe.Servings,
 		ReadyTime:     recipe.ReadyTime,
 		CookingTime:   recipe.CookingTime,
@@ -314,8 +372,8 @@ func (r *RecipeRepositoryImpl) UpdateRecipe(id uint, req dtos.RecipeRequest) (*d
 		KCal:          recipe.KCal,
 		Vegan:         recipe.Vegan,
 		Vegetarian:    recipe.Vegetarian,
-		Ingredients:   ingredients,
-		Nutrients:     nutrients,
+		Ingredients:   ingredientResponses,
+		Nutrients:     nutrientResponses,
 	}, nil
 }
 
@@ -323,10 +381,16 @@ func (r *RecipeRepositoryImpl) DeleteRecipe(id uint) error {
 	if err := r.db.Where("recipe_id = ?", id).Delete(&models.RecipeNutrient{}).Error; err != nil {
 		return err
 	}
+
 	if err := r.db.Where("recipe_id = ?", id).Delete(&models.RecipeInstruction{}).Error; err != nil {
 		return err
 	}
-	return r.db.Delete(&models.Recipe{}, id).Error
+
+	if err := r.db.Where("recipe_id = ?", id).Delete(&models.RecipeItem{}).Error; err != nil {
+		return err
+	}
+
+	return r.db.Delete(&models.Recipe{}, "id = ?", id).Error
 }
 
 func (r *RecipeRepositoryImpl) SearchRecipes(query dtos.RecipeQuery) (dtos.RecipesResponse, error) {
@@ -514,7 +578,7 @@ func (r *RecipeRepositoryImpl) SearchRecipes(query dtos.RecipeQuery) (dtos.Recip
 				recipe.Instructions = make([]models.RecipeInstruction, len(apiRecipe.AnalyzedInstructions[0].Steps))
 				for i, step := range apiRecipe.AnalyzedInstructions[0].Steps {
 					recipe.Instructions[i] = models.RecipeInstruction{
-						Number: step.Number,
+						Number: uint(step.Number),
 						Step:   step.Step,
 					}
 				}

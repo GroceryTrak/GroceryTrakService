@@ -57,11 +57,17 @@ func (r *ItemRepositoryImpl) CreateItem(req dtos.ItemRequest) (dtos.ItemResponse
 		Name:          req.Name,
 		Image:         req.Image,
 		SpoonacularID: req.SpoonacularID,
-		Nutrients:     make([]models.ItemNutrient, len(req.Nutrients)),
 	}
 
+	if err := tx.Create(&item).Error; err != nil {
+		tx.Rollback()
+		return dtos.ItemResponse{}, err
+	}
+
+	nutrients := make([]models.ItemNutrient, len(req.Nutrients))
 	for i, n := range req.Nutrients {
-		item.Nutrients[i] = models.ItemNutrient{
+		nutrients[i] = models.ItemNutrient{
+			ItemID:              item.ID,
 			Name:                n.Name,
 			Amount:              n.Amount,
 			Unit:                n.Unit,
@@ -69,7 +75,7 @@ func (r *ItemRepositoryImpl) CreateItem(req dtos.ItemRequest) (dtos.ItemResponse
 		}
 	}
 
-	if err := tx.Create(&item).Error; err != nil {
+	if err := tx.Create(&nutrients).Error; err != nil {
 		tx.Rollback()
 		return dtos.ItemResponse{}, err
 	}
@@ -78,8 +84,8 @@ func (r *ItemRepositoryImpl) CreateItem(req dtos.ItemRequest) (dtos.ItemResponse
 		return dtos.ItemResponse{}, err
 	}
 
-	nutrientResponses := make([]dtos.ItemNutrientResponse, len(item.Nutrients))
-	for i, n := range item.Nutrients {
+	nutrientResponses := make([]dtos.ItemNutrientResponse, len(nutrients))
+	for i, n := range nutrients {
 		nutrientResponses[i] = dtos.ItemNutrientResponse{
 			Name:                n.Name,
 			Amount:              n.Amount,
@@ -201,7 +207,5 @@ func (r *ItemRepositoryImpl) SearchItems(keyword string) (dtos.ItemsResponse, er
 		})
 	}
 
-	return dtos.ItemsResponse{
-		Items: itemResponses,
-	}, nil
+	return dtos.ItemsResponse{Items: itemResponses}, nil
 }
