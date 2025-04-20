@@ -52,7 +52,7 @@ func SetupRoutes(r *chi.Mux) {
 	r.Use(middlewares.SecurityHeadersMiddleware)
 	r.Use(middlewares.RequestSizeLimitMiddleware)
 	r.Use(middlewares.ProductionURLMiddleware)
-	r.Use(middlewares.RateLimitMiddleware)
+	// r.Use(middlewares.RateLimitMiddleware)
 
 	if env != "production" {
 		r.Route("/swagger", func(r chi.Router) {
