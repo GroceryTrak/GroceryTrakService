@@ -95,6 +95,41 @@
                 }
             }
         },
+        "/image": {
+            "get": {
+                "description": "Proxy an image from a given URL",
+                "produces": [
+                    "image/*"
+                ],
+                "tags": [
+                    "image"
+                ],
+                "summary": "Proxy an image",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Image URL",
+                        "name": "url",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
+                        }
+                    },
+                    "default": {
+                        "description": "Standard Error Responses",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/item": {
             "post": {
                 "description": "Add a new item to the database",

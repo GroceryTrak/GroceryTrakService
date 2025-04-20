@@ -62,6 +62,10 @@ func SetupRoutes(r *chi.Mux) {
 		})
 	}
 
+	r.Route("/image", func(r chi.Router) {
+		r.Get("/", handlers.ImageProxyHandler)
+	})
+
 	r.Route("/auth", func(r chi.Router) {
 		r.Post("/register", authHandler.RegisterHandler)
 		r.Post("/login", authHandler.LoginHandler)

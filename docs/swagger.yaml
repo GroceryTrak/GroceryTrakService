@@ -434,6 +434,29 @@ paths:
       summary: Register a new user
       tags:
       - auth
+  /image:
+    get:
+      description: Proxy an image from a given URL
+      parameters:
+      - description: Image URL
+        in: query
+        name: url
+        required: true
+        type: string
+      produces:
+      - image/*
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        default:
+          description: Standard Error Responses
+          schema:
+            $ref: '#/definitions/dtos.ErrorResponse'
+      summary: Proxy an image
+      tags:
+      - image
   /item:
     post:
       consumes:
