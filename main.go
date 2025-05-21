@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"github.com/GroceryTrak/GroceryTrakService/config"
+	"github.com/GroceryTrak/GroceryTrakService/internal/clients"
 	"github.com/GroceryTrak/GroceryTrakService/internal/handlers"
 	"github.com/GroceryTrak/GroceryTrakService/internal/repository"
 	"github.com/GroceryTrak/GroceryTrakService/internal/routes"
@@ -35,6 +36,7 @@ func main() {
 	config.InitRedis()
 	config.InitPostgreSQL()
 	config.InitSpoonacularClient()
+	clients.InitAWSCognito()
 
 	// Initialize queue repository
 	routes.InitQueue(config.RedisClient)
@@ -67,7 +69,7 @@ func main() {
 
 	// Create server
 	server := &http.Server{
-		Addr:    ":8080",
+		Addr:    "0.0.0.0:8080",
 		Handler: r,
 	}
 

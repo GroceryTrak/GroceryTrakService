@@ -64,7 +64,61 @@ func (h *AuthHandler) LoginHandler(w http.ResponseWriter, r *http.Request) {
 	resp, err := h.Repo.LoginUser(req)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
-		json.NewEncoder(w).Encode(dtos.UnauthorizedResponse{Error: "Invalid credentials"})
+		json.NewEncoder(w).Encode(dtos.UnauthorizedResponse{Error: err.Error()})
+		return
+	}
+
+	json.NewEncoder(w).Encode(resp)
+}
+
+// @Summary Confirms a user's email
+// @Description Confirms a user's email using the OTP code sent to their email during sign-up
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body dtos.ConfirmRequest true "OTP Confirmation Request"
+// @Success 200 {object} dtos.ConfirmResponse
+// @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
+// @Router /auth/confirm [post]
+func (h *AuthHandler) ConfirmHandler(w http.ResponseWriter, r *http.Request) {
+	var req dtos.ConfirmRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(dtos.BadRequestResponse{Error: "Invalid request format"})
+		return
+	}
+
+	resp, err := h.Repo.ConfirmUser(req)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(dtos.ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	json.NewEncoder(w).Encode(resp)
+}
+
+// @Summary Resends the confirmation code to the user's email
+// @Description Resends the email confirmation code in case the user did not receive it
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body dtos.ResendRequest true "Resend Code Request"
+// @Success 200 {object} dtos.ResendResponse
+// @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
+// @Router /auth/resend [post]
+func (h *AuthHandler) ResendHandler(w http.ResponseWriter, r *http.Request) {
+	var req dtos.ResendRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(dtos.BadRequestResponse{Error: "Invalid request format"})
+		return
+	}
+
+	resp, err := h.Repo.ResendCode(req)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(dtos.ErrorResponse{Error: err.Error()})
 		return
 	}
 

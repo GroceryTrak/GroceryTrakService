@@ -23,6 +23,46 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/auth/confirm": {
+            "post": {
+                "description": "Confirms a user's email using the OTP code sent to their email during sign-up",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Confirms a user's email",
+                "parameters": [
+                    {
+                        "description": "OTP Confirmation Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ConfirmRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ConfirmResponse"
+                        }
+                    },
+                    "default": {
+                        "description": "Standard Error Responses",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/login": {
             "post": {
                 "description": "Logs in a user and returns a JWT token",
@@ -92,6 +132,46 @@ const docTemplate = `{
                         "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/dtos.RegisterResponse"
+                        }
+                    },
+                    "default": {
+                        "description": "Standard Error Responses",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/resend": {
+            "post": {
+                "description": "Resends the email confirmation code in case the user did not receive it",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Resends the confirmation code to the user's email",
+                "parameters": [
+                    {
+                        "description": "Resend Code Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ResendRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ResendResponse"
                         }
                     },
                     "default": {
@@ -835,6 +915,28 @@ const docTemplate = `{
                 }
             }
         },
+        "dtos.ConfirmRequest": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "example": "123456"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "abc@gmail.com"
+                }
+            }
+        },
+        "dtos.ConfirmResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "User confirmed successfully."
+                }
+            }
+        },
         "dtos.ConflictResponse": {
             "type": "object",
             "properties": {
@@ -997,20 +1099,36 @@ const docTemplate = `{
             "properties": {
                 "password": {
                     "type": "string",
-                    "example": "securepassword123"
+                    "example": "Password@123"
                 },
                 "username": {
                     "type": "string",
-                    "example": "john_doe"
+                    "example": "abc@gmail.com"
                 }
             }
         },
         "dtos.LoginResponse": {
             "type": "object",
             "properties": {
-                "token": {
+                "accessToken": {
                     "type": "string",
                     "example": "eyJhbGciOiJIUzI1NiIsInR..."
+                },
+                "expiresIn": {
+                    "type": "integer",
+                    "example": 3600
+                },
+                "idToken": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR..."
+                },
+                "refreshToken": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR..."
+                },
+                "tokenType": {
+                    "type": "string",
+                    "example": "Bearer"
                 }
             }
         },
@@ -1287,11 +1405,11 @@ const docTemplate = `{
             "properties": {
                 "password": {
                     "type": "string",
-                    "example": "securepassword123"
+                    "example": "Password@123"
                 },
                 "username": {
                     "type": "string",
-                    "example": "john_doe"
+                    "example": "abc@gmail.com"
                 }
             }
         },
@@ -1300,7 +1418,25 @@ const docTemplate = `{
             "properties": {
                 "message": {
                     "type": "string",
-                    "example": "User registered successfully"
+                    "example": "User registered successfully."
+                }
+            }
+        },
+        "dtos.ResendRequest": {
+            "type": "object",
+            "properties": {
+                "username": {
+                    "type": "string",
+                    "example": "abc@gmail.com"
+                }
+            }
+        },
+        "dtos.ResendResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Confirmation code resent successfully."
                 }
             }
         },

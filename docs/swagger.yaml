@@ -5,6 +5,21 @@ definitions:
         example: Invalid request data
         type: string
     type: object
+  dtos.ConfirmRequest:
+    properties:
+      code:
+        example: "123456"
+        type: string
+      username:
+        example: abc@gmail.com
+        type: string
+    type: object
+  dtos.ConfirmResponse:
+    properties:
+      message:
+        example: User confirmed successfully.
+        type: string
+    type: object
   dtos.ConflictResponse:
     properties:
       error:
@@ -116,16 +131,28 @@ definitions:
   dtos.LoginRequest:
     properties:
       password:
-        example: securepassword123
+        example: Password@123
         type: string
       username:
-        example: john_doe
+        example: abc@gmail.com
         type: string
     type: object
   dtos.LoginResponse:
     properties:
-      token:
+      accessToken:
         example: eyJhbGciOiJIUzI1NiIsInR...
+        type: string
+      expiresIn:
+        example: 3600
+        type: integer
+      idToken:
+        example: eyJhbGciOiJIUzI1NiIsInR...
+        type: string
+      refreshToken:
+        example: eyJhbGciOiJIUzI1NiIsInR...
+        type: string
+      tokenType:
+        example: Bearer
         type: string
     type: object
   dtos.NotFoundResponse:
@@ -322,16 +349,28 @@ definitions:
   dtos.RegisterRequest:
     properties:
       password:
-        example: securepassword123
+        example: Password@123
         type: string
       username:
-        example: john_doe
+        example: abc@gmail.com
         type: string
     type: object
   dtos.RegisterResponse:
     properties:
       message:
-        example: User registered successfully
+        example: User registered successfully.
+        type: string
+    type: object
+  dtos.ResendRequest:
+    properties:
+      username:
+        example: abc@gmail.com
+        type: string
+    type: object
+  dtos.ResendResponse:
+    properties:
+      message:
+        example: Confirmation code resent successfully.
         type: string
     type: object
   dtos.UnauthorizedResponse:
@@ -382,6 +421,33 @@ info:
   title: GroceryTrak API
   version: "1.0"
 paths:
+  /auth/confirm:
+    post:
+      consumes:
+      - application/json
+      description: Confirms a user's email using the OTP code sent to their email
+        during sign-up
+      parameters:
+      - description: OTP Confirmation Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dtos.ConfirmRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dtos.ConfirmResponse'
+        default:
+          description: Standard Error Responses
+          schema:
+            $ref: '#/definitions/dtos.ErrorResponse'
+      summary: Confirms a user's email
+      tags:
+      - auth
   /auth/login:
     post:
       consumes:
@@ -432,6 +498,33 @@ paths:
           schema:
             $ref: '#/definitions/dtos.ErrorResponse'
       summary: Register a new user
+      tags:
+      - auth
+  /auth/resend:
+    post:
+      consumes:
+      - application/json
+      description: Resends the email confirmation code in case the user did not receive
+        it
+      parameters:
+      - description: Resend Code Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dtos.ResendRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dtos.ResendResponse'
+        default:
+          description: Standard Error Responses
+          schema:
+            $ref: '#/definitions/dtos.ErrorResponse'
+      summary: Resends the confirmation code to the user's email
       tags:
       - auth
   /image:

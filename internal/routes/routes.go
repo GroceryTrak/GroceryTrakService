@@ -22,7 +22,7 @@ func InitQueue(redisClient *redis.Client) {
 
 func SetupDependencies() (*handlers.ItemHandler, *handlers.AuthHandler, *handlers.RecipeHandler, *handlers.UserItemHandler) {
 	itemRepo := repository.NewItemRepository(config.DB)
-	authRepo := repository.NewAuthRepository(config.DB)
+	authRepo := repository.NewAuthRepository()
 	recipeRepo := repository.NewRecipeRepository(config.DB, config.SpoonacularClient, itemQueueRepo)
 	userItemRepo := repository.NewUserItemRepository(config.DB, itemQueueRepo)
 
@@ -69,6 +69,8 @@ func SetupRoutes(r *chi.Mux) {
 	r.Route("/auth", func(r chi.Router) {
 		r.Post("/register", authHandler.RegisterHandler)
 		r.Post("/login", authHandler.LoginHandler)
+		r.Post("/confirm", authHandler.ConfirmHandler)
+		r.Post("/resend", authHandler.ResendHandler)
 	})
 
 	r.Route("/item", func(r chi.Router) {
