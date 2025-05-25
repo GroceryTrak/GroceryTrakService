@@ -124,3 +124,57 @@ func (h *AuthHandler) ResendHandler(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(resp)
 }
+
+// @Summary Sends a password reset OTP code to the user's email
+// @Description Triggers Cognito to send a verification code for password reset
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body dtos.ForgotPasswordRequest true "Forgot Password Request"
+// @Success 200 {object} dtos.ForgotPasswordResponse
+// @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
+// @Router /auth/forgot-password [post]
+func (h *AuthHandler) ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
+	var req dtos.ForgotPasswordRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(dtos.BadRequestResponse{Error: "Invalid request format"})
+		return
+	}
+
+	resp, err := h.Repo.ForgotPassword(req)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(dtos.ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	json.NewEncoder(w).Encode(resp)
+}
+
+// @Summary Resets the user's password using an OTP code
+// @Description Confirms the OTP code and sets a new password
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body dtos.ResetPasswordRequest true "Reset Password Request"
+// @Success 200 {object} dtos.ResetPasswordResponse
+// @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
+// @Router /auth/reset-password [post]
+func (h *AuthHandler) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
+	var req dtos.ResetPasswordRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(dtos.BadRequestResponse{Error: "Invalid request format"})
+		return
+	}
+
+	resp, err := h.Repo.ResetPassword(req)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(dtos.ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	json.NewEncoder(w).Encode(resp)
+}

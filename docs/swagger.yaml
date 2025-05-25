@@ -47,6 +47,18 @@ definitions:
         example: Access denied
         type: string
     type: object
+  dtos.ForgotPasswordRequest:
+    properties:
+      username:
+        example: abc@gmail.com
+        type: string
+    type: object
+  dtos.ForgotPasswordResponse:
+    properties:
+      message:
+        example: Password reset code sent successfully.
+        type: string
+    type: object
   dtos.InternalServerErrorResponse:
     properties:
       error:
@@ -373,6 +385,24 @@ definitions:
         example: Confirmation code resent successfully.
         type: string
     type: object
+  dtos.ResetPasswordRequest:
+    properties:
+      code:
+        example: "123456"
+        type: string
+      password:
+        example: NewPassword@123
+        type: string
+      username:
+        example: abc@gmail.com
+        type: string
+    type: object
+  dtos.ResetPasswordResponse:
+    properties:
+      message:
+        example: Password has been reset successfully.
+        type: string
+    type: object
   dtos.UnauthorizedResponse:
     properties:
       error:
@@ -446,6 +476,32 @@ paths:
           schema:
             $ref: '#/definitions/dtos.ErrorResponse'
       summary: Confirms a user's email
+      tags:
+      - auth
+  /auth/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Triggers Cognito to send a verification code for password reset
+      parameters:
+      - description: Forgot Password Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dtos.ForgotPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dtos.ForgotPasswordResponse'
+        default:
+          description: Standard Error Responses
+          schema:
+            $ref: '#/definitions/dtos.ErrorResponse'
+      summary: Sends a password reset OTP code to the user's email
       tags:
       - auth
   /auth/login:
@@ -525,6 +581,32 @@ paths:
           schema:
             $ref: '#/definitions/dtos.ErrorResponse'
       summary: Resends the confirmation code to the user's email
+      tags:
+      - auth
+  /auth/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Confirms the OTP code and sets a new password
+      parameters:
+      - description: Reset Password Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dtos.ResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dtos.ResetPasswordResponse'
+        default:
+          description: Standard Error Responses
+          schema:
+            $ref: '#/definitions/dtos.ErrorResponse'
+      summary: Resets the user's password using an OTP code
       tags:
       - auth
   /image:

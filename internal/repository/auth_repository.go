@@ -15,6 +15,8 @@ type AuthRepository interface {
 	LoginUser(req dtos.LoginRequest) (dtos.LoginResponse, error)
 	ConfirmUser(req dtos.ConfirmRequest) (dtos.ConfirmResponse, error)
 	ResendCode(req dtos.ResendRequest) (dtos.ResendResponse, error)
+	ForgotPassword(req dtos.ForgotPasswordRequest) (dtos.ForgotPasswordResponse, error)
+	ResetPassword(req dtos.ResetPasswordRequest) (dtos.ResetPasswordResponse, error)
 }
 
 type AuthRepositoryImpl struct{}
@@ -96,4 +98,34 @@ func (r *AuthRepositoryImpl) ResendCode(req dtos.ResendRequest) (dtos.ResendResp
 	}
 
 	return dtos.ResendResponse{Message: "Confirmation code resent successfully."}, nil
+}
+
+func (r *AuthRepositoryImpl) ForgotPassword(req dtos.ForgotPasswordRequest) (dtos.ForgotPasswordResponse, error) {
+	input := &cognitoidentityprovider.ForgotPasswordInput{
+		ClientId: aws.String(clients.ClientID),
+		Username: aws.String(req.Username),
+	}
+
+	_, err := clients.CognitoClient.ForgotPassword(context.TODO(), input)
+	if err != nil {
+		return dtos.ForgotPasswordResponse{}, err
+	}
+
+	return dtos.ForgotPasswordResponse{Message: "Password reset code sent successfully."}, nil
+}
+
+func (r *AuthRepositoryImpl) ResetPassword(req dtos.ResetPasswordRequest) (dtos.ResetPasswordResponse, error) {
+	input := &cognitoidentityprovider.ConfirmForgotPasswordInput{
+		ClientId:         aws.String(clients.ClientID),
+		Username:         aws.String(req.Username),
+		ConfirmationCode: aws.String(req.Code),
+		Password:         aws.String(req.Password),
+	}
+
+	_, err := clients.CognitoClient.ConfirmForgotPassword(context.TODO(), input)
+	if err != nil {
+		return dtos.ResetPasswordResponse{}, err
+	}
+
+	return dtos.ResetPasswordResponse{Message: "Password has been reset successfully."}, nil
 }

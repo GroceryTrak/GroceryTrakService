@@ -38,3 +38,21 @@ type ResendRequest struct {
 type ResendResponse struct {
 	Message string `json:"message" example:"Confirmation code resent successfully."`
 }
+
+type ForgotPasswordRequest struct {
+	Username string `json:"username" example:"abc@gmail.com"`
+}
+
+type ResetPasswordRequest struct {
+	Username string `json:"username" example:"abc@gmail.com"`
+	Code     string `json:"code" example:"123456"`
+	Password string `json:"password" example:"NewPassword@123"`
+}
+
+type ForgotPasswordResponse struct {
+	Message string `json:"message" example:"Password reset code sent successfully."`
+}
+
+type ResetPasswordResponse struct {
+	Message string `json:"message" example:"Password has been reset successfully."`
+}

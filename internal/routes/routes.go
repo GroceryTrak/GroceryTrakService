@@ -71,6 +71,8 @@ func SetupRoutes(r *chi.Mux) {
 		r.Post("/login", authHandler.LoginHandler)
 		r.Post("/confirm", authHandler.ConfirmHandler)
 		r.Post("/resend", authHandler.ResendHandler)
+		r.Post("/forgot-password", authHandler.ForgotPasswordHandler)
+		r.Post("/reset-password", authHandler.ResetPasswordHandler)
 	})
 
 	r.Route("/item", func(r chi.Router) {
