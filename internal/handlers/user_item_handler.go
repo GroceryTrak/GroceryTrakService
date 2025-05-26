@@ -32,7 +32,7 @@ func NewUserItemHandler(repo repository.UserItemRepository) *UserItemHandler {
 // @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
 // @Router /user_item [get]
 func (h *UserItemHandler) GetAllUserItemsHandler(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value(middlewares.IDKey).(uint)
+	userID := r.Context().Value(middlewares.IDKey).(string)
 
 	userItems, err := h.Repo.GetAllUserItems(userID)
 	if err != nil {
@@ -54,7 +54,7 @@ func (h *UserItemHandler) GetAllUserItemsHandler(w http.ResponseWriter, r *http.
 // @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
 // @Router /user_item/{item_id} [get]
 func (h *UserItemHandler) GetUserItemHandler(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value(middlewares.IDKey).(uint)
+	userID := r.Context().Value(middlewares.IDKey).(string)
 
 	itemID, err := strconv.ParseUint(chi.URLParam(r, "item_id"), 10, 32)
 	if err != nil {
@@ -84,7 +84,7 @@ func (h *UserItemHandler) GetUserItemHandler(w http.ResponseWriter, r *http.Requ
 // @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
 // @Router /user_item [post]
 func (h *UserItemHandler) CreateUserItemHandler(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value(middlewares.IDKey).(uint)
+	userID := r.Context().Value(middlewares.IDKey).(string)
 
 	var req dtos.UserItemRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -116,7 +116,7 @@ func (h *UserItemHandler) CreateUserItemHandler(w http.ResponseWriter, r *http.R
 // @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
 // @Router /user_item/{item_id} [put]
 func (h *UserItemHandler) UpdateUserItemHandler(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value(middlewares.IDKey).(uint)
+	userID := r.Context().Value(middlewares.IDKey).(string)
 
 	itemID, err := strconv.ParseUint(chi.URLParam(r, "item_id"), 10, 32)
 	if err != nil {
@@ -151,7 +151,7 @@ func (h *UserItemHandler) UpdateUserItemHandler(w http.ResponseWriter, r *http.R
 // @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
 // @Router /user_item/{item_id} [delete]
 func (h *UserItemHandler) DeleteUserItemHandler(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value(middlewares.IDKey).(uint)
+	userID := r.Context().Value(middlewares.IDKey).(string)
 
 	itemID, err := strconv.ParseUint(chi.URLParam(r, "item_id"), 10, 32)
 	if err != nil {
@@ -180,7 +180,7 @@ func (h *UserItemHandler) DeleteUserItemHandler(w http.ResponseWriter, r *http.R
 // @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
 // @Router /user_item/search [get]
 func (h *UserItemHandler) SearchUserItemsHandler(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value(middlewares.IDKey).(uint)
+	userID := r.Context().Value(middlewares.IDKey).(string)
 
 	query := dtos.UserItemQuery{}
 	query.Name = r.URL.Query().Get("name")
@@ -205,7 +205,7 @@ func (h *UserItemHandler) SearchUserItemsHandler(w http.ResponseWriter, r *http.
 // @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
 // @Router /user_item/detect [post]
 func (h *UserItemHandler) DetectUserItemsHandler(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value(middlewares.IDKey).(uint)
+	userID := r.Context().Value(middlewares.IDKey).(string)
 
 	apiKey := os.Getenv("OPENAI_API_KEY")
 	if apiKey == "" {
@@ -257,7 +257,7 @@ func (h *UserItemHandler) DetectUserItemsHandler(w http.ResponseWriter, r *http.
 // @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
 // @Router /user_item/predict [post]
 func (h *UserItemHandler) PredictUserItemsHandler(w http.ResponseWriter, r *http.Request) {
-	userID := r.Context().Value(middlewares.IDKey).(uint)
+	userID := r.Context().Value(middlewares.IDKey).(string)
 
 	err := r.ParseMultipartForm(10 << 20)
 	if err != nil {

@@ -5,15 +5,14 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/GroceryTrak/GroceryTrakService/internal/utils"
+	"github.com/GroceryTrak/GroceryTrakService/internal/clients"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 )
 
 type contextKey string
 
 const (
-	IDKey   contextKey = "id"
-	UserKey contextKey = "username"
-	RoleKey contextKey = "role"
+	IDKey contextKey = "id"
 )
 
 func AuthMiddleware(next http.Handler) http.Handler {
@@ -32,37 +31,30 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 		tokenString := tokenParts[1]
 
-		userID, username, role, err := utils.VerifyToken(tokenString)
+		input := &cognitoidentityprovider.GetUserInput{
+			AccessToken: &tokenString,
+		}
+
+		_, err := clients.CognitoClient.GetUser(context.TODO(), input)
 		if err != nil {
 			http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), IDKey, userID)
-		ctx = context.WithValue(ctx, UserKey, username)
-		ctx = context.WithValue(ctx, RoleKey, role)
+		claims, err := clients.ParseToken(tokenString)
+		if err != nil {
+			http.Error(w, "Invalid token claims", http.StatusUnauthorized)
+			return
+		}
 
+		ctx := context.WithValue(r.Context(), IDKey, claims.Sub)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
-func GetUserIDFromContext(r *http.Request) uint {
-	if userID, ok := r.Context().Value(IDKey).(uint); ok {
+func GetUserIDFromContext(r *http.Request) string {
+	if userID, ok := r.Context().Value(IDKey).(string); ok {
 		return userID
-	}
-	return 0
-}
-
-func GetUsernameFromContext(r *http.Request) string {
-	if username, ok := r.Context().Value(UserKey).(string); ok {
-		return username
-	}
-	return ""
-}
-
-func GetRoleFromContext(r *http.Request) string {
-	if role, ok := r.Context().Value(RoleKey).(string); ok {
-		return role
 	}
 	return ""
 }

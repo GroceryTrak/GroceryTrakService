@@ -409,6 +409,43 @@ definitions:
         example: Invalid credentials
         type: string
     type: object
+  dtos.UpdateUserRequest:
+    properties:
+      activityLevel:
+        type: string
+      currentWeight:
+        type: number
+      currentWeightUnit:
+        type: string
+      dietType:
+        type: string
+      gender:
+        type: string
+      goal:
+        type: string
+      height:
+        type: number
+      heightUnit:
+        type: string
+      name:
+        type: string
+      targetWeight:
+        type: number
+      targetWeightUnit:
+        type: string
+    required:
+    - activityLevel
+    - currentWeight
+    - currentWeightUnit
+    - dietType
+    - gender
+    - goal
+    - height
+    - heightUnit
+    - name
+    - targetWeight
+    - targetWeightUnit
+    type: object
   dtos.UserItemRequest:
     properties:
       amount:
@@ -438,6 +475,46 @@ definitions:
         items:
           $ref: '#/definitions/dtos.UserItemResponse'
         type: array
+    type: object
+  dtos.UserNutritionResponse:
+    properties:
+      calories:
+        type: integer
+      carb_percent:
+        type: number
+      fat_percent:
+        type: number
+      protein_percent:
+        type: number
+      user_id:
+        type: string
+    type: object
+  dtos.UserResponse:
+    properties:
+      activityLevel:
+        type: string
+      currentWeight:
+        type: number
+      currentWeightUnit:
+        type: string
+      dietType:
+        type: string
+      gender:
+        type: string
+      goal:
+        type: string
+      height:
+        type: number
+      heightUnit:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      targetWeight:
+        type: number
+      targetWeightUnit:
+        type: string
     type: object
 info:
   contact:
@@ -896,6 +973,81 @@ paths:
       summary: Search recipes
       tags:
       - recipe
+  /user:
+    get:
+      description: Get the authenticated user's profile
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dtos.UserResponse'
+        default:
+          description: Standard Error Responses
+          schema:
+            $ref: '#/definitions/dtos.ErrorResponse'
+      summary: Get user profile
+      tags:
+      - user
+    put:
+      consumes:
+      - application/json
+      description: Update the authenticated user's profile
+      parameters:
+      - description: Update User Profile
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/dtos.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dtos.UserResponse'
+        default:
+          description: Standard Error Responses
+          schema:
+            $ref: '#/definitions/dtos.ErrorResponse'
+      summary: Update user profile
+      tags:
+      - user
+  /user/nutrition:
+    get:
+      description: Get the authenticated user's nutrition goals
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dtos.UserNutritionResponse'
+        default:
+          description: Standard Error Responses
+          schema:
+            $ref: '#/definitions/dtos.ErrorResponse'
+      summary: Get user nutrition goals
+      tags:
+      - user_nutrition
+    post:
+      description: Calculate and save nutrition goals based on user's profile
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dtos.UserNutritionResponse'
+        default:
+          description: Standard Error Responses
+          schema:
+            $ref: '#/definitions/dtos.ErrorResponse'
+      summary: Calculate and save user nutrition goals
+      tags:
+      - user_nutrition
   /user_item:
     get:
       description: Get all items for the authenticated user

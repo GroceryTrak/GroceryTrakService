@@ -15,14 +15,14 @@ import (
 )
 
 type UserItemRepository interface {
-	GetAllUserItems(userID uint) (dtos.UserItemsResponse, error)
-	GetUserItem(itemID, userID uint) (dtos.UserItemResponse, error)
-	CreateUserItem(req dtos.UserItemRequest, userID uint) (dtos.UserItemResponse, error)
-	UpdateUserItem(req dtos.UserItemRequest, itemID, userID uint) (dtos.UserItemResponse, error)
-	DeleteUserItem(itemID, userID uint) error
-	SearchUserItems(query dtos.UserItemQuery, userID uint) (dtos.UserItemsResponse, error)
-	PredictUserItems(items []string, userID uint) (dtos.UserItemsResponse, error)
-	DetectUserItems(imageData []byte, userID uint, apiKey string) (dtos.UserItemsResponse, error)
+	GetAllUserItems(userID string) (dtos.UserItemsResponse, error)
+	GetUserItem(itemID uint, userID string) (dtos.UserItemResponse, error)
+	CreateUserItem(req dtos.UserItemRequest, userID string) (dtos.UserItemResponse, error)
+	UpdateUserItem(req dtos.UserItemRequest, itemID uint, userID string) (dtos.UserItemResponse, error)
+	DeleteUserItem(itemID uint, userID string) error
+	SearchUserItems(query dtos.UserItemQuery, userID string) (dtos.UserItemsResponse, error)
+	PredictUserItems(items []string, userID string) (dtos.UserItemsResponse, error)
+	DetectUserItems(imageData []byte, userID string, apiKey string) (dtos.UserItemsResponse, error)
 }
 
 type UserItemRepositoryImpl struct {
@@ -37,7 +37,7 @@ func NewUserItemRepository(db *gorm.DB, queue ItemQueueRepository) UserItemRepos
 	}
 }
 
-func (r *UserItemRepositoryImpl) GetAllUserItems(userID uint) (dtos.UserItemsResponse, error) {
+func (r *UserItemRepositoryImpl) GetAllUserItems(userID string) (dtos.UserItemsResponse, error) {
 	var userItems []models.UserItem
 	if err := r.db.Where("user_id = ?", userID).Find(&userItems).Error; err != nil {
 		return dtos.UserItemsResponse{}, err
@@ -67,7 +67,7 @@ func (r *UserItemRepositoryImpl) GetAllUserItems(userID uint) (dtos.UserItemsRes
 	}, nil
 }
 
-func (r *UserItemRepositoryImpl) GetUserItem(itemID, userID uint) (dtos.UserItemResponse, error) {
+func (r *UserItemRepositoryImpl) GetUserItem(itemID uint, userID string) (dtos.UserItemResponse, error) {
 	var userItem models.UserItem
 	if err := r.db.First(&userItem, "item_id = ? AND user_id = ?", itemID, userID).Error; err != nil {
 		return dtos.UserItemResponse{}, err
@@ -90,7 +90,7 @@ func (r *UserItemRepositoryImpl) GetUserItem(itemID, userID uint) (dtos.UserItem
 	}, nil
 }
 
-func (r *UserItemRepositoryImpl) CreateUserItem(req dtos.UserItemRequest, userID uint) (dtos.UserItemResponse, error) {
+func (r *UserItemRepositoryImpl) CreateUserItem(req dtos.UserItemRequest, userID string) (dtos.UserItemResponse, error) {
 	userItem := models.UserItem{
 		UserID: userID,
 		ItemID: req.ItemID,
@@ -119,7 +119,7 @@ func (r *UserItemRepositoryImpl) CreateUserItem(req dtos.UserItemRequest, userID
 	}, nil
 }
 
-func (r *UserItemRepositoryImpl) UpdateUserItem(req dtos.UserItemRequest, itemID, userID uint) (dtos.UserItemResponse, error) {
+func (r *UserItemRepositoryImpl) UpdateUserItem(req dtos.UserItemRequest, itemID uint, userID string) (dtos.UserItemResponse, error) {
 	var userItem models.UserItem
 	if err := r.db.First(&userItem, "item_id = ? AND user_id = ?", itemID, userID).Error; err != nil {
 		return dtos.UserItemResponse{}, err
@@ -149,14 +149,14 @@ func (r *UserItemRepositoryImpl) UpdateUserItem(req dtos.UserItemRequest, itemID
 	}, nil
 }
 
-func (r *UserItemRepositoryImpl) DeleteUserItem(itemID, userID uint) error {
+func (r *UserItemRepositoryImpl) DeleteUserItem(itemID uint, userID string) error {
 	if err := r.db.Delete(&models.UserItem{}, "item_id = ? AND user_id = ?", itemID, userID).Error; err != nil {
 		return err
 	}
 	return nil
 }
 
-func (r *UserItemRepositoryImpl) SearchUserItems(query dtos.UserItemQuery, userID uint) (dtos.UserItemsResponse, error) {
+func (r *UserItemRepositoryImpl) SearchUserItems(query dtos.UserItemQuery, userID string) (dtos.UserItemsResponse, error) {
 	var userItems []models.UserItem
 	searchTerm := "%" + query.Name + "%"
 
@@ -189,7 +189,7 @@ func (r *UserItemRepositoryImpl) SearchUserItems(query dtos.UserItemQuery, userI
 	}, nil
 }
 
-func (r *UserItemRepositoryImpl) PredictUserItems(items []string, userID uint) (dtos.UserItemsResponse, error) {
+func (r *UserItemRepositoryImpl) PredictUserItems(items []string, userID string) (dtos.UserItemsResponse, error) {
 	var userItemResponses []dtos.UserItemResponse
 
 	for _, class := range items {
@@ -239,7 +239,7 @@ func (r *UserItemRepositoryImpl) PredictUserItems(items []string, userID uint) (
 	}, nil
 }
 
-func (r *UserItemRepositoryImpl) DetectUserItems(imageData []byte, userID uint, apiKey string) (dtos.UserItemsResponse, error) {
+func (r *UserItemRepositoryImpl) DetectUserItems(imageData []byte, userID string, apiKey string) (dtos.UserItemsResponse, error) {
 	client := openai.NewClient(apiKey)
 	imageBase64 := base64.StdEncoding.EncodeToString(imageData)
 	prompt := `You are a grocery item detector. Analyze the image and identify all grocery items. For each item, provide:

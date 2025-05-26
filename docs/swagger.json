@@ -689,6 +689,120 @@
                 }
             }
         },
+        "/user": {
+            "get": {
+                "description": "Get the authenticated user's profile",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Get user profile",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.UserResponse"
+                        }
+                    },
+                    "default": {
+                        "description": "Standard Error Responses",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Update the authenticated user's profile",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Update user profile",
+                "parameters": [
+                    {
+                        "description": "Update User Profile",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dtos.UpdateUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.UserResponse"
+                        }
+                    },
+                    "default": {
+                        "description": "Standard Error Responses",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/nutrition": {
+            "get": {
+                "description": "Get the authenticated user's nutrition goals",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user_nutrition"
+                ],
+                "summary": "Get user nutrition goals",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.UserNutritionResponse"
+                        }
+                    },
+                    "default": {
+                        "description": "Standard Error Responses",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Calculate and save nutrition goals based on user's profile",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user_nutrition"
+                ],
+                "summary": "Calculate and save user nutrition goals",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.UserNutritionResponse"
+                        }
+                    },
+                    "default": {
+                        "description": "Standard Error Responses",
+                        "schema": {
+                            "$ref": "#/definitions/dtos.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/user_item": {
             "get": {
                 "description": "Get all items for the authenticated user",
@@ -1565,6 +1679,57 @@
                 }
             }
         },
+        "dtos.UpdateUserRequest": {
+            "type": "object",
+            "required": [
+                "activityLevel",
+                "currentWeight",
+                "currentWeightUnit",
+                "dietType",
+                "gender",
+                "goal",
+                "height",
+                "heightUnit",
+                "name",
+                "targetWeight",
+                "targetWeightUnit"
+            ],
+            "properties": {
+                "activityLevel": {
+                    "type": "string"
+                },
+                "currentWeight": {
+                    "type": "number"
+                },
+                "currentWeightUnit": {
+                    "type": "string"
+                },
+                "dietType": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "goal": {
+                    "type": "string"
+                },
+                "height": {
+                    "type": "number"
+                },
+                "heightUnit": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "targetWeight": {
+                    "type": "number"
+                },
+                "targetWeightUnit": {
+                    "type": "string"
+                }
+            }
+        },
         "dtos.UserItemRequest": {
             "type": "object",
             "properties": {
@@ -1606,6 +1771,67 @@
                     "items": {
                         "$ref": "#/definitions/dtos.UserItemResponse"
                     }
+                }
+            }
+        },
+        "dtos.UserNutritionResponse": {
+            "type": "object",
+            "properties": {
+                "calories": {
+                    "type": "integer"
+                },
+                "carb_percent": {
+                    "type": "number"
+                },
+                "fat_percent": {
+                    "type": "number"
+                },
+                "protein_percent": {
+                    "type": "number"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "dtos.UserResponse": {
+            "type": "object",
+            "properties": {
+                "activityLevel": {
+                    "type": "string"
+                },
+                "currentWeight": {
+                    "type": "number"
+                },
+                "currentWeightUnit": {
+                    "type": "string"
+                },
+                "dietType": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "goal": {
+                    "type": "string"
+                },
+                "height": {
+                    "type": "number"
+                },
+                "heightUnit": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "targetWeight": {
+                    "type": "number"
+                },
+                "targetWeightUnit": {
+                    "type": "string"
                 }
             }
         }

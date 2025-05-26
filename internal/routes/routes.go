@@ -20,20 +20,24 @@ func InitQueue(redisClient *redis.Client) {
 	itemQueueRepo = repository.NewItemQueueRepository(redisClient)
 }
 
-func SetupDependencies() (*handlers.ItemHandler, *handlers.AuthHandler, *handlers.RecipeHandler, *handlers.UserItemHandler) {
+func SetupDependencies() (*handlers.ItemHandler, *handlers.AuthHandler, *handlers.RecipeHandler, *handlers.UserItemHandler, *handlers.UserNutritionHandler, *handlers.UserHandler) {
 	itemRepo := repository.NewItemRepository(config.DB)
 	authRepo := repository.NewAuthRepository()
 	recipeRepo := repository.NewRecipeRepository(config.DB, config.SpoonacularClient, itemQueueRepo)
 	userItemRepo := repository.NewUserItemRepository(config.DB, itemQueueRepo)
+	userNutritionRepo := repository.NewUserNutritionRepository(config.DB)
+	userRepo := repository.NewUserRepository(config.DB)
 
 	return handlers.NewItemHandler(itemRepo),
 		handlers.NewAuthHandler(authRepo),
 		handlers.NewRecipeHandler(recipeRepo),
-		handlers.NewUserItemHandler(userItemRepo)
+		handlers.NewUserItemHandler(userItemRepo),
+		handlers.NewUserNutritionHandler(userNutritionRepo),
+		handlers.NewUserHandler(userRepo)
 }
 
 func SetupRoutes(r *chi.Mux) {
-	itemHandler, authHandler, recipeHandler, userItemHandler := SetupDependencies()
+	itemHandler, authHandler, recipeHandler, userItemHandler, userNutritionHandler, userHandler := SetupDependencies()
 
 	env := os.Getenv("ENV")
 	flutterURL := os.Getenv("FLUTTER_URL")
@@ -101,5 +105,19 @@ func SetupRoutes(r *chi.Mux) {
 		r.Delete("/{item_id}", userItemHandler.DeleteUserItemHandler)
 		r.Post("/predict", userItemHandler.PredictUserItemsHandler)
 		r.Post("/detect", userItemHandler.DetectUserItemsHandler)
+	})
+
+	r.Route("/user/nutrition", func(r chi.Router) {
+		r.Use(middlewares.AuthMiddleware)
+
+		r.Get("/", userNutritionHandler.GetNutritionHandler)
+		r.Post("/", userNutritionHandler.CalculateNutritionHandler)
+	})
+
+	r.Route("/user", func(r chi.Router) {
+		r.Use(middlewares.AuthMiddleware)
+
+		r.Get("/", userHandler.GetUserHandler)
+		r.Put("/", userHandler.UpdateUserHandler)
 	})
 }
