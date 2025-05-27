@@ -110,14 +110,25 @@ func SetupRoutes(r *chi.Mux) {
 	r.Route("/user/nutrition", func(r chi.Router) {
 		r.Use(middlewares.AuthMiddleware)
 
-		r.Get("/", userNutritionHandler.GetNutritionHandler)
-		r.Post("/", userNutritionHandler.CalculateNutritionHandler)
+		r.Get("/", userNutritionHandler.GetUserNutritionHandler)
+		r.Post("/", userNutritionHandler.CreateUserNutritionHandler)
+		r.Put("/", userNutritionHandler.UpdateUserNutritionHandler)
+		r.Delete("/", userNutritionHandler.DeleteUserNutritionHandler)
 	})
 
 	r.Route("/user", func(r chi.Router) {
 		r.Use(middlewares.AuthMiddleware)
 
 		r.Get("/", userHandler.GetUserHandler)
+		r.Post("/", userHandler.CreateUserHandler)
 		r.Put("/", userHandler.UpdateUserHandler)
+		r.Delete("/", userHandler.DeleteUserHandler)
+
+		r.Route("/nutrition", func(r chi.Router) {
+			r.Get("/", userNutritionHandler.GetUserNutritionHandler)
+			r.Post("/", userNutritionHandler.CreateUserNutritionHandler)
+			r.Put("/", userNutritionHandler.UpdateUserNutritionHandler)
+			r.Delete("/", userNutritionHandler.DeleteUserNutritionHandler)
+		})
 	})
 }

@@ -43,14 +43,14 @@ func (h *UserHandler) GetUserHandler(w http.ResponseWriter, r *http.Request) {
 // @Tags user
 // @Accept json
 // @Produce json
-// @Param user body dtos.UpdateUserRequest true "Update User Profile"
+// @Param user body dtos.UserRequest true "Update User Profile"
 // @Success 200 {object} dtos.UserResponse
 // @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
 // @Router /user [put]
 func (h *UserHandler) UpdateUserHandler(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value(middlewares.IDKey).(string)
 
-	var req dtos.UpdateUserRequest
+	var req dtos.UserRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(dtos.BadRequestResponse{Error: "Invalid request payload"})
@@ -66,4 +66,54 @@ func (h *UserHandler) UpdateUserHandler(w http.ResponseWriter, r *http.Request) 
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(user)
+}
+
+// @Summary Create user profile
+// @Description Create a new user profile for the authenticated user
+// @Tags user
+// @Accept json
+// @Produce json
+// @Param user body dtos.UserRequest true "Create User Profile"
+// @Success 201 {object} dtos.UserResponse
+// @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
+// @Router /user [post]
+func (h *UserHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value(middlewares.IDKey).(string)
+
+	var req dtos.UserRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(dtos.BadRequestResponse{Error: "Invalid request payload"})
+		return
+	}
+
+	user, err := h.Repo.CreateUser(req, userID)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(dtos.InternalServerErrorResponse{Error: "Failed to create user profile"})
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(user)
+}
+
+// @Summary Delete user profile
+// @Description Delete the authenticated user's profile
+// @Tags user
+// @Produce json
+// @Success 204 "No Content"
+// @Failure default {object} dtos.ErrorResponse "Standard Error Responses"
+// @Router /user [delete]
+func (h *UserHandler) DeleteUserHandler(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value(middlewares.IDKey).(string)
+
+	if err := h.Repo.DeleteUser(userID); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(dtos.InternalServerErrorResponse{Error: "Failed to delete user profile"})
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
